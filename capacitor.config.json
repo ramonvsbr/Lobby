@@ -1,0 +1,10 @@
+{
+  "appId": "br.com.ramon.lobby",
+  "appName": "Lobby",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "style": "DEFAULT"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "lobby",
+  "version": "1.0.0",
+  "description": "Webapp de treino de academia, 100% local, sem servidor, sem internet, sem conta.\r Os dados ficam salvos no `localStorage` do navegador que você usar para abrir o app.\r Funciona offline como PWA (dá pra \"instalar\" no celular).",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sync": "node copiar-www.js && npx cap sync"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ramonvsbr/maromba.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ramonvsbr/maromba/issues"
+  },
+  "homepage": "https://github.com/ramonvsbr/maromba#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

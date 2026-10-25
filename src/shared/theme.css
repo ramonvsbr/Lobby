@@ -1,0 +1,68 @@
+/* =========================================================
+   LOBBY — tema único (claro). Hub, Maromba e Saldo.
+   Mude aqui e vale para os três: carregado por último.
+   ========================================================= */
+:root, :root[data-theme="light"], :root[data-theme="dark"]{
+  color-scheme: light;
+  /* Paleta "Earthy Forest Hues": #DAD8CC  #A6B38D  #58825C  #3C5C40  #335042 */
+  --bg:#ECEBE3; --surface:#F8F7F2; --surface-2:#E5E4D9; --surface-3:#DAD8CC;
+  --line:#CBCDBA; --line-soft:#DDDDD0; --line-strong:#A6B38D;
+  --text:#1F3328; --text-muted:#4F6354; --text-faint:#738377;
+  --chalk:#58825C; --chalk-ink:#FFFFFF; --chalk-dim:#A6B38D; --chalk-text:#3C5C40; --chalk-soft:rgba(88,130,92,.14);
+  --oxide:#B5543A; --oxide-soft:rgba(181,84,58,.12); --moss:#3F7A4A; --moss-soft:rgba(63,122,74,.14);
+  --overlay:rgba(26,43,35,.5);
+  --tile-yellow:rgba(166,179,141,.38); --tile-blue:rgba(218,216,204,.75); --tile-green:rgba(88,130,92,.22); --tile-empty:rgba(166,179,141,.28);
+  --muscle:#DAD8CC; --muscle-stroke:#A6B38D;
+  --radius:14px; --radius-lg:22px;
+  --press:rgba(51,80,66,.28);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+body{ background:var(--bg); animation:lobby-in .28s var(--ease); }
+@keyframes lobby-in{ from{ opacity:0; transform:translateY(6px); } }
+.theme-toggle{ display:none !important; }
+
+/* Navegação */
+.sidebar{ background:var(--surface); border-color:var(--line-soft); }
+.nav-btn{ border-radius:14px; }
+.nav-btn.active{ background:var(--chalk-soft); color:var(--chalk-text); }
+.nav-group{ letter-spacing:.1em; color:var(--text-faint); }
+
+/* Cartões: mesma forma do hub */
+.stat-card,.treino-card,.hist-card,.refeicao-card,.agua-card,.sessao-card,.ex-card,.book,.year-card,.empty-state-card,.selectable-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); }
+.stat-value,.summary-value,.stat-value-meta{ font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.stat-label{ letter-spacing:.06em; text-transform:uppercase; font-size:11px; font-weight:700; color:var(--text-muted); }
+
+/* Botões e campos */
+.btn{ border-radius:var(--radius); transition:transform .12s var(--ease), box-shadow .12s var(--ease); }
+.btn-accent{ box-shadow:0 3px 0 var(--press); }
+.btn:active{ transform:translateY(2px) scale(.98); box-shadow:none; }
+.fab{ box-shadow:0 4px 0 var(--press), 0 12px 24px rgba(0,0,0,.35); }
+select,textarea,input[type=text],input[type=number],input[type=date],input[type=time],input[type=search]{
+  background:var(--surface-2); border-color:var(--line); border-radius:14px; }
+select:focus,textarea:focus,input:focus{ border-color:var(--chalk); box-shadow:0 0 0 3px var(--chalk-soft); }
+
+/* Pílulas e abas */
+.chip,.tab,.opt-chip,.chip-toggle,.chip-filter{ border-radius:99px; }
+.tab.active,.chip-toggle.active,.seg-btn.active{ background:var(--chalk); color:var(--chalk-ink); border-color:var(--chalk); }
+.segmented{ border-radius:99px; border-color:var(--line); }
+
+/* Janelas e avisos */
+.modal-panel,.modal-card{ background:var(--surface); border-radius:28px 28px 0 0; }
+.toast{ border-radius:16px; border-color:var(--chalk); }
+
+/* Barras de progresso */
+.meta-bar-track{ border-radius:99px; overflow:hidden; }
+.meta-bar-fill{ border-radius:99px; transition:width .6s var(--ease); }
+
+/* Sem barra superior fixa: a marca some e os ajustes rolam com a página */
+.lobby-back{ display:none; }
+@media (max-width:900px){
+  .app-shell{ position:relative; }
+  .sidebar-brand{ display:none !important; }
+  .sidebar-footer{ position:absolute !important; top:calc(8px + env(safe-area-inset-top,0px)) !important; right:8px !important; }
+  .main{ padding-top:calc(60px + env(safe-area-inset-top,0px)) !important; }
+  .lobby-back{ display:inline-flex; align-items:center; position:absolute; z-index:25; top:calc(10px + env(safe-area-inset-top,0px)); left:12px;
+    height:36px; padding:0 14px; border-radius:99px; background:var(--surface-2); border:1px solid var(--line); color:var(--text-muted); font-size:13px; font-weight:700; text-decoration:none; }
+  .lobby-back:active{ background:var(--surface-3); }
+}

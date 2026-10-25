@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lobby</title>
+<meta name="theme-color" content="#ECEBE3">
+<script>document.documentElement.setAttribute('data-theme','light');</script>
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('fonts/PlusJakartaSans.ttf') format('truetype');font-weight:200 800;font-display:swap}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+#hub{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 18px) 18px calc(env(safe-area-inset-bottom,0px) + 28px);display:grid;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between}
+.top h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.top small{color:var(--text-muted);font-size:13px;text-transform:capitalize}
+.ibtn{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
+.ibtn svg,.ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px}
+.card h2{margin:0 0 12px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center}
+.player{display:grid;grid-template-columns:84px 1fr;gap:16px;align-items:center}
+.ring{position:relative;width:84px;height:84px}
+.ring svg{width:84px;height:84px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.ring .bg{stroke:var(--surface-3)} .ring .fg{stroke:var(--chalk);transition:stroke-dashoffset .9s var(--ease)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:26px;font-weight:800}
+.p-title{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.p-sub{color:var(--text-muted);font-size:13px;margin:2px 0 10px}
+.bar{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--chalk);transition:width .9s var(--ease)}
+.week{display:flex;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.day{display:grid;justify-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-faint)}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.dot.on{background:var(--chalk);border-color:var(--chalk);color:var(--chalk-ink)} .dot.today{border-color:var(--text)}
+.dot svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.streak{font-weight:700;color:var(--text)}
+.q{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line-soft)}
+.q:first-of-type{border-top:0;padding-top:0}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;flex:none}
+.q.done .chk{background:var(--moss);border-color:var(--moss);color:var(--chalk-ink)}
+.chk svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.q .t{flex:1;min-width:0} .q .t b{display:block;font-weight:700}
+.q .t span{font-size:13px;color:var(--text-muted)}
+.q.done .t b{color:var(--text-muted);text-decoration:line-through}
+.xp{font-size:12px;font-weight:700;color:var(--chalk-text);background:var(--chalk-soft);border-radius:99px;padding:3px 9px}
+.q.done .xp{color:var(--moss);background:var(--moss-soft)}
+.act{height:40px;padding:0 14px;border-radius:var(--radius);background:var(--chalk);color:var(--chalk-ink);font-weight:700;box-shadow:0 3px 0 var(--press);transition:transform .12s var(--ease)}
+.act:active{transform:translateY(2px);box-shadow:none}
+.all{margin-top:12px;text-align:center;font-weight:700;color:var(--moss);font-size:14px}
+.apps{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.app{border-radius:var(--radius-lg);padding:16px;text-align:left;display:grid;gap:14px;min-height:140px;align-content:space-between;border:1px solid var(--line);transition:transform .15s var(--ease)}
+.app:active{transform:scale(.97)}
+.app .ico{width:44px;height:44px;border-radius:14px;background:var(--surface);display:grid;place-items:center}
+.app b{display:block;font-size:17px;font-weight:800}
+.app span{display:block;font-size:13px;color:var(--text-muted);margin-top:2px}
+.link{font-weight:700;color:var(--text);text-transform:none;letter-spacing:0;font-size:13px}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translate(-50%,30px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);padding:12px 16px;border-radius:14px;font-weight:600;display:flex;gap:14px;align-items:center;transition:.25s var(--ease);max-width:90vw;z-index:30}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{font-weight:800;color:var(--chalk-dim)}
+#sheet{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:flex-end;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+#sheet.on{opacity:1;pointer-events:auto}
+#sheet .pn{background:var(--surface);width:100%;max-width:520px;margin:0 auto;border-radius:24px 24px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateY(40px);transition:transform .25s var(--ease);max-height:80vh;overflow:auto}
+#sheet.on .pn{transform:none}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bd{text-align:center;padding:14px 6px;border-radius:16px;background:var(--tile-yellow);display:grid;gap:4px;justify-items:center}
+.bd .e{font-size:28px;line-height:1} .bd b{font-size:12px;font-weight:700} .bd span{font-size:11px;color:var(--text-muted)}
+.bd.lock{background:var(--surface-2);filter:grayscale(1);opacity:.55}
+</style>
+</head>
+<body>
+<main id="hub"></main>
+<div id="toast" role="status"></div>
+<div id="sheet"><div class="pn" id="sheet-body"></div></div>
+<script src="hub.js"></script>
+</body>
+</html>
