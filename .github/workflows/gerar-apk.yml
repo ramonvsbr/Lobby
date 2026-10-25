@@ -1,0 +1,71 @@
+name: Gerar APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**.md']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Instalar dependências e copiar o app para o Android
+        run: |
+          npm install --no-audit --no-fund
+          node copiar-www.js
+          npx cap sync android
+
+      - name: Preparar chave de assinatura (se existir)
+        run: |
+          if [ -n "$KS_B64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/lobby.p12"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/lobby.p12" >> "$GITHUB_ENV"
+            echo "TASK=assembleRelease" >> "$GITHUB_ENV"
+            echo "Assinando com a chave do Lobby."
+          else
+            echo "TASK=assembleDebug" >> "$GITHUB_ENV"
+            echo "::warning::Sem chave configurada: gerando APK de teste (debug)."
+          fi
+
+      - name: Compilar
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew "$TASK" --no-daemon
+
+      - name: Nomear o APK
+        run: |
+          APK=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          cp "$APK" "Lobby-1.0.${{ github.run_number }}.apk"
+          ls -la Lobby-*.apk
+
+      - name: Publicar no Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Lobby 1.0.${{ github.run_number }}
+          files: Lobby-1.0.${{ github.run_number }}.apk
+          generate_release_notes: true
