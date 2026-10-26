@@ -1,4 +1,4 @@
-package br.com.ramon.maromba;
+package br.com.ramon.lobby;
 
 import com.getcapacitor.BridgeActivity;
 
