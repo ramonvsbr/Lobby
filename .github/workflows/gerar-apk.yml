@@ -1,13 +1,13 @@
 name: Gerar APK
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # botão "Run workflow" na aba Actions
   push:
     branches: [main]
     paths-ignore: ['docs/**', '**.md']
 
 permissions:
-  contents: write
+  contents: write           # necessário para criar o Release
 
 jobs:
   apk:
@@ -39,6 +39,14 @@ jobs:
           node copiar-www.js
           npx cap sync android
 
+      - name: Gerar ícones (só se existir assets/icon-only.png)
+        run: |
+          if [ -f assets/icon-only.png ]; then
+            npx capacitor-assets generate --android --assetPath assets --iconBackgroundColor '#ECEBE3' --iconBackgroundColorDark '#ECEBE3'
+          else
+            echo "Sem assets/icon-only.png: usando o ícone que já está no projeto."
+          fi
+
       - name: Preparar chave de assinatura (se existir)
         run: |
           if [ -n "$KS_B64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
@@ -48,7 +56,7 @@ jobs:
             echo "Assinando com a chave do Lobby."
           else
             echo "TASK=assembleDebug" >> "$GITHUB_ENV"
-            echo "::warning::Sem chave configurada: gerando APK de teste (debug)."
+            echo "::warning::Sem chave configurada: gerando APK de teste (debug). Veja o passo a passo para criar os segredos."
           fi
 
       - name: Compilar
