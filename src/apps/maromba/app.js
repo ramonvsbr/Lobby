@@ -1542,13 +1542,6 @@ function emptyStateHTML({ icon, title, message }) {
     </div>`;
 }
 
-function saudacao() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Bom dia. Bora treinar?';
-  if (h < 18) return 'Boa tarde. Bora treinar?';
-  return 'Boa noite. Bora treinar?';
-}
-
 // Cartão do topo da home quando há treino em andamento.
 function continuarTreinoHTML(sessao) {
   if (!sessao) return '';
@@ -1778,7 +1771,7 @@ function renderMeusTreinos() {
   APP.innerHTML = `
     <section class="panel panel-home">
       <div class="home-header">
-        <h1>${saudacao()} 👋</h1>
+        <h1>Bora treinar? 👋</h1>
         ${ultimaSessao ? `
           <div class="last-workout-badge" title="Realizado em ${formatDateBR(ultimaSessao.data)}">
             <span>Último:</span>
