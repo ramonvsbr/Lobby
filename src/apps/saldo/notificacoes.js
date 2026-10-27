@@ -92,7 +92,7 @@
     try{
       steps.push(LN.createChannel({
         id: CHANNEL_ID, name: 'Vencimentos',
-        description: 'Avisos de contas e receitas do controle Mensal',
+        description: 'Lembretes de contas e ganhos do Mensal',
         importance: 4, visibility: 1, vibration: true, lights: true, lightColor: ICON_COLOR
       }));
     }catch(e){}
@@ -194,7 +194,7 @@
     var title, body, large;
 
     if(isExp) title = n === 1 ? 'Conta vence ' + w : n + ' contas vencem ' + w;
-    else title = n === 1 ? 'Receita prevista ' + w : n + ' receitas previstas ' + w;
+    else title = n === 1 ? 'Ganho previsto ' + w : n + ' ganhos previstos ' + w;
 
     if(n === 1){
       body = nameOf(g.items[0]) + ': ' + api.fmtMoney(g.items[0].cents);
@@ -311,8 +311,8 @@
     if(!native) status = 'Disponível só no app Android.';
     else if(!cfg.on) status = 'Desligado.';
     else if(blocked) status = 'Bloqueado pelo Android.';
-    else if(lastError) status = 'Não foi possível agendar os avisos. Tente de novo.';
-    else if(lastPlan.length) status = lastPlan.length + (lastPlan.length === 1 ? ' aviso agendado' : ' avisos agendados') + '. Próximo: ' + fmtNext(lastPlan) + '.';
+    else if(lastError) status = 'Não foi possível agendar os lembretes. Tente de novo.';
+    else if(lastPlan.length) status = lastPlan.length + (lastPlan.length === 1 ? ' lembrete agendado' : ' lembretes agendados') + '. Próximo: ' + fmtNext(lastPlan) + '.';
     else status = 'Nenhum vencimento com dia e valor nos próximos ' + WINDOW_DAYS + ' dias.';
     ui.status.textContent = status;
   }
@@ -333,7 +333,7 @@
           if(p === 'granted'){
             cfg.on = true; saveCfg();
             reschedule(true).then(function(){
-              if(api && !lastError) api.showToast(lastPlan.length ? 'Avisos ligados.' : 'Avisos ligados. Nenhum vencimento nos próximos ' + WINDOW_DAYS + ' dias.', 'success');
+              if(api && !lastError) api.showToast(lastPlan.length ? 'Lembretes ligados.' : 'Lembretes ligados. Nenhum vencimento nos próximos ' + WINDOW_DAYS + ' dias.', 'success');
             });
           } else {
             cfg.on = false; saveCfg();
@@ -344,7 +344,7 @@
       } else {
         cfg.on = false; saveCfg();
         reschedule(true);
-        if(api) api.showToast('Avisos desligados.', 'info', 2200);
+        if(api) api.showToast('Lembretes desligados.', 'info', 2200);
       }
     });
 
@@ -389,11 +389,11 @@
             /* sem "schedule": a notificação aparece na hora */
             return LN.schedule({ notifications: [{
               id: TEST_ID, title: 'Saldo',
-              body: 'Os avisos de vencimento estão funcionando.',
+              body: 'Os lembretes de vencimento estão funcionando.',
               channelId: CHANNEL_ID, smallIcon: SMALL_ICON, iconColor: ICON_COLOR
             }]});
           }).then(function(){
-            if(api) api.showToast('Aviso de teste enviado. Veja a barra de notificações.', 'success', 3000);
+            if(api) api.showToast('Lembrete de teste enviado. Veja a barra de notificações.', 'success', 3000);
           });
         }).catch(function(){ if(api) api.showToast('Não foi possível enviar o aviso de teste.', 'error'); });
       });

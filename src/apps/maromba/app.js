@@ -1771,7 +1771,6 @@ function renderMeusTreinos() {
   APP.innerHTML = `
     <section class="panel panel-home">
       <div class="home-header">
-        <h1>Bora treinar? 👋</h1>
         ${ultimaSessao ? `
           <div class="last-workout-badge" title="Realizado em ${formatDateBR(ultimaSessao.data)}">
             <span>Último:</span>

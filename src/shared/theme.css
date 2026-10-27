@@ -7,7 +7,7 @@
    ========================================================= */
 
 /* 1 · FONTE DE TÍTULO (arquivo em src/fonts/Fredoka.ttf) */
-@font-face{font-family:'Fredoka';src:url('../fonts/Fredoka.ttf') format('truetype');font-weight:300 700;font-display:swap}
+@font-face{font-family:'Fredoka';src:url('../fonts/Fredoka.ttf') format('truetype');font-weight:300 700;font-display:block}
 
 /* 2 · TOKENS */
 :root, :root[data-theme="light"], :root[data-theme="dark"]{
@@ -41,8 +41,15 @@
 }
 
 /* 3 · BASE */
-body{ background:var(--bg); animation:lobby-in .28s var(--ease); }
-@keyframes lobby-in{ from{ opacity:0; transform:translateY(6px); } }
+html,body{ background:var(--bg); }   /* fundo já no <html>: nada de flash branco entre páginas */
+
+/* Transição entre páginas (View Transitions, navegação entre documentos).
+   Hub e apps carregam este arquivo, então os dois lados participam. */
+@view-transition{ navigation:auto; }
+::view-transition-group(root){ animation-duration:.18s; animation-timing-function:var(--ease); }
+/* Sem suporte (WebView antigo): fade curto de entrada, como fallback */
+@supports not (view-transition-name:none){ body{ animation:lobby-in .12s var(--ease); } }
+@keyframes lobby-in{ from{ opacity:0; transform:translateY(4px); } }
 .theme-toggle{ display:none !important; }
 h1,h2,h3,.brand-word,.book-title,.month-label,.section-head h1,.section-head h2{ font-family:var(--font-display); letter-spacing:0; }
 h1,.book-title,.brand-word{ font-weight:600; }
@@ -112,7 +119,8 @@ select:focus,textarea:focus,input:focus,.field input:focus{ border-color:var(--c
 .meta-bar-fill{ border-radius:var(--radius-pill); transition:width .6s var(--ease);
   background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 8px,transparent 8px 16px); background-size:22px 22px; animation:stripes 1.4s linear infinite; }
 @keyframes stripes{ to{ background-position:22px 0; } }
-@media (prefers-reduced-motion:reduce){ .meta-bar-fill{ animation:none; } body{ animation:none; } }
+@media (prefers-reduced-motion:reduce){ .meta-bar-fill{ animation:none; } body{ animation:none; }
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){ animation:none !important; } }
 
 /* 9 · MOBILE: sem barra fixa no topo; cenário do app + nav flutuante */
 .lobby-back{ display:none; }

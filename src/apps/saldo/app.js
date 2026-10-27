@@ -664,7 +664,7 @@
   /* Abas Despesas | Receitas (mesmo estilo de chips) */
   function buildTypeTabs(rowEl, active, onSelect){
     rowEl.innerHTML = '';
-    [['expenses', 'Despesas'], ['income', 'Receitas']].forEach(function(t){
+    [['expenses', 'Gastos'], ['income', 'Ganhos']].forEach(function(t){
       var btn = el('button', 'tab' + (t[0] === active ? ' active' : ''), t[1]);
       btn.type = 'button';
       btn.setAttribute('aria-pressed', t[0] === active ? 'true' : 'false');
@@ -792,7 +792,7 @@
     }
 
     var elSub = document.getElementById('statSaldoSub');
-    if(elSub) elSub.textContent = !isMonthTracked(mk) ? 'sem lançamentos' : (saldo >= 0 ? 'positivo' : 'negativo');
+    if(elSub) elSub.textContent = !isMonthTracked(mk) ? 'nada registrado' : (saldo >= 0 ? 'no azul' : 'no vermelho');
   }
 
   function dayValue(row){
@@ -1073,7 +1073,7 @@
     var elAtualSub = document.getElementById('diarioSaldoAtualSub');
     if(elAtualSub){
       if(!tracked) elAtualSub.textContent = 'sem saldo antes de ' + monthLabel(state.months.slice().sort()[0]);
-      else if(cutoff === 0) elAtualSub.textContent = 'mês futuro: nada contado ainda';
+      else if(cutoff === 0) elAtualSub.textContent = 'mês futuro: ainda não entra no cofre';
       else if(cutoff >= 99) elAtualSub.textContent = 'mês encerrado: tudo contado';
       else elAtualSub.textContent = 'Mensal e Diário até o dia ' + cutoff;
     }
@@ -1082,7 +1082,7 @@
     var cardSaldo = saldoInput ? saldoInput.closest('.stat-card') : null;
     var precisaSaldo = welcomePending();
     if(cardSaldo) cardSaldo.classList.toggle('needs-saldo', precisaSaldo);
-    if(precisaSaldo && elAtualSub) elAtualSub.textContent = 'Toque aqui: informe seu saldo';
+    if(precisaSaldo && elAtualSub) elAtualSub.textContent = 'Toque aqui: conte quanto você tem';
 
     var elFinal = document.getElementById('diarioSaldoFinal');
     if(elFinal){
@@ -1110,14 +1110,14 @@
     });
 
     if(list.length === 0){
-      container.appendChild(el('div', 'empty-note', diarioTipo === 'income' ? 'Nenhuma receita neste dia.' : 'Nenhuma despesa neste dia.'));
+      container.appendChild(el('div', 'empty-note', diarioTipo === 'income' ? 'Nenhum ganho neste dia.' : 'Nenhum gasto neste dia.'));
       return;
     }
 
     list.forEach(function(row){
       container.appendChild(buildEntryItem({
         name: row.item,
-        namePlaceholder: diarioTipo === 'income' ? 'Nome da receita' : 'Nome do gasto',
+        namePlaceholder: diarioTipo === 'income' ? 'Nome do ganho' : 'Nome do gasto',
         delTitle: 'Remover lançamento',
         dayValue: row.day,
         valueCents: row.amount,
@@ -1155,7 +1155,7 @@
     if(icon) icon.innerHTML = '<svg class="icon" viewBox="0 0 24 24"><path d="' +
       (diarioTipo === 'income' ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6') + '"/></svg>';
     var add = document.getElementById('addDiarioBtn');
-    if(add) add.innerHTML = '<span class="plus-sym">+</span> ' + (diarioTipo === 'income' ? 'adicionar receita' : 'adicionar despesa');
+    if(add) add.innerHTML = '<span class="plus-sym">+</span> ' + (diarioTipo === 'income' ? 'adicionar ganho' : 'adicionar gasto');
   }
 
   function addDiarioRow(){
@@ -1234,9 +1234,9 @@
     var mk = quickMode === 'mensal' ? state.selectedMonth : getSelectedDiarioMonth();
     var isInc = quickKind === 'income';
     var title = document.getElementById('quickTitle');
-    if(title) title.textContent = isInc ? 'Nova receita' : 'Nova despesa';
+    if(title) title.textContent = isInc ? 'Novo ganho' : 'Novo gasto';
     var lbl = document.getElementById('quickMonthLabel');
-    if(lbl) lbl.textContent = (quickMode === 'mensal' ? 'Será adicionada ao Mensal de ' : 'Será lançada em ') + monthLabel(mk) + '.';
+    if(lbl) lbl.textContent = (quickMode === 'mensal' ? 'Entra no Mensal de ' : 'Entra em ') + monthLabel(mk) + '.';
     if(qValor) qValor.value = '';
     if(qItem) qItem.value = '';
     if(qDia) qDia.value = quickMode === 'mensal' ? '' : diarioDay();
@@ -1246,7 +1246,7 @@
     if(tipoBlock) tipoBlock.style.display = quickMode === 'mensal' ? '' : 'none';
     setQuickTipo(isInc ? 'recurring' : 'once');
     var submitBtn = document.getElementById('quickSubmit');
-    if(submitBtn) submitBtn.textContent = quickMode === 'mensal' ? (isInc ? 'Adicionar receita' : 'Adicionar despesa') : 'Lançar gasto';
+    if(submitBtn) submitBtn.textContent = quickMode === 'mensal' ? (isInc ? 'Adicionar ganho' : 'Adicionar gasto') : 'Lançar gasto';
     quickOverlay.classList.add('open');
     setTimeout(function(){ if(qValor) qValor.focus(); }, 60);
   }
@@ -1304,9 +1304,9 @@
         persist();
         render();
         closeQuick();
-        var what = isInc ? 'Receita' : 'Despesa';
-        if(nParc > 1) showToast(what + ' parcelada: ' + nParc + ' × ' + fmtMoney(cents) + ' adicionada.', 'success', 3200);
-        else showToast(what + ' de ' + fmtMoney(cents) + ' adicionada.', 'success', 2600);
+        var what = isInc ? 'Ganho' : 'Gasto';
+        if(nParc > 1) showToast(what + ' parcelado: ' + nParc + ' × ' + fmtMoney(cents) + ' adicionado.', 'success', 3200);
+        else showToast(what + ' de ' + fmtMoney(cents) + ' adicionado.', 'success', 2600);
         return;
       }
 
@@ -1321,7 +1321,7 @@
       persist();
       renderDiario();
       closeQuick();
-      showToast((isInc ? 'Receita' : 'Despesa') + ' de ' + fmtMoney(cents) + ' lançada.', 'success', 2600);
+      showToast((isInc ? 'Ganho' : 'Gasto') + ' de ' + fmtMoney(cents) + ' lançado.', 'success', 2600);
     });
   }
 
@@ -1348,15 +1348,15 @@
       var ate = cut === 0 ? 'Mês futuro: nada contado ainda.' : cut >= 99 ? 'Mês encerrado: tudo contado.' : 'Contado até o dia ' + cut + '.';
       var primeiro = state.months.slice().sort()[0] === mk;
       var podeAuto = !!b.manual && !primeiro;
-      var msg = ['Saldo inicial: ' + fmtMoney(b.initial), '+ Receitas do Mensal: ' + fmtMoney(inc), '− Despesas do Mensal: ' + fmtMoney(exp),
-        (dn >= 0 ? '+ ' : '− ') + 'Diário (líquido): ' + fmtMoney(Math.abs(dn)), '= Saldo atual: ' + fmtMoney(saldoAtualCents), '',
-        ate + ' O que ainda vai cair no mês entra só no Projetado (' + fmtMoney(proj) + ').'];
+      var msg = ['Saldo inicial: ' + fmtMoney(b.initial), '+ Ganhos do Mensal: ' + fmtMoney(inc), '− Gastos do Mensal: ' + fmtMoney(exp),
+        (dn >= 0 ? '+ ' : '− ') + 'Diário (líquido): ' + fmtMoney(Math.abs(dn)), '= Cofre agora: ' + fmtMoney(saldoAtualCents), '',
+        ate + ' O que ainda vai cair no mês entra só na Previsão (' + fmtMoney(proj) + ').'];
       if(podeAuto) msg.push('', 'Você ajustou este saldo manualmente.');
       showConfirm(msg.join('\n'), { title: 'Como é calculado', pre: true, single: !podeAuto, cancelLabel: 'Fechar', confirmLabel: podeAuto ? 'Voltar ao automático' : 'Ok' }).then(function(ok){
         if(ok && podeAuto){
           state.daily.balances[mk].manual = false;
           recomputeDailyBalances(); persist(); renderDiario();
-          showToast('Saldo voltou ao cálculo automático.', 'success');
+          showToast('Cofre voltou ao cálculo automático.', 'success');
         }
       });
     }
@@ -1554,17 +1554,17 @@
     if(view === 'anual'){
       if(viewAnual) viewAnual.style.display = 'block';
       activateTriggers('anual');
-      if(pageTitle) pageTitle.textContent = 'Resumo anual';
+      if(pageTitle) pageTitle.textContent = 'Balanço do ano';
       renderAnual();
     } else if(view === 'diario'){
       if(viewDiario) viewDiario.style.display = 'block';
       activateTriggers('diario');
-      if(pageTitle) pageTitle.textContent = 'Controle diário';
+      if(pageTitle) pageTitle.textContent = 'Gastos do dia';
       renderDiario();
     } else {
       if(viewMensal) viewMensal.style.display = 'block';
       activateTriggers('mensal');
-      if(pageTitle) pageTitle.textContent = 'Controle mensal';
+      if(pageTitle) pageTitle.textContent = 'Contas do mês';
       render();
     }
     closeConfig();
@@ -1788,7 +1788,7 @@
       marcarBoasVindas();
       persist();
       renderDiario();
-      showToast('Saldo registrado: ' + fmtMoney(cents) + '. Agora lance seus gastos no + ou cadastre as contas no Mensal.', 'success', 6000);
+      showToast('Cofre registrado: ' + fmtMoney(cents) + '. Agora lance seus gastos no + ou cadastre as contas no Mensal.', 'success', 6000);
     });
   }
 
@@ -1844,15 +1844,15 @@
       var stats = document.createElement('div');
       stats.className = 'year-stats';
       stats.innerHTML =
-        '<div class="year-stat despesas"><p class="stat-label">Despesas</p><p class="stat-value">' + fmtMoney(expTotal) + '</p></div>' +
-        '<div class="year-stat receitas"><p class="stat-label">Receitas</p><p class="stat-value">' + fmtMoney(incTotal) + '</p></div>';
+        '<div class="year-stat despesas"><p class="stat-label">Gastos</p><p class="stat-value">' + fmtMoney(expTotal) + '</p></div>' +
+        '<div class="year-stat receitas"><p class="stat-label">Ganhos</p><p class="stat-value">' + fmtMoney(incTotal) + '</p></div>';
       card.appendChild(stats);
       card.appendChild(buildYearChart(year, monthsInYear));
 
       var breakdown = document.createElement('div');
       breakdown.className = 'year-breakdown';
-      breakdown.appendChild(buildBreakdownCol('Despesas por item', expItems));
-      breakdown.appendChild(buildBreakdownCol('Receitas por item', incItems));
+      breakdown.appendChild(buildBreakdownCol('Gastos por item', expItems));
+      breakdown.appendChild(buildBreakdownCol('Ganhos por item', incItems));
       card.appendChild(breakdown);
 
       card.setAttribute('data-year', year);
@@ -2036,7 +2036,7 @@
     }
     function f(n){ return n.toFixed(1); }
 
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Receitas e despesas por mês em ' + year + '" xmlns="http://www.w3.org/2000/svg">';
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Ganhos e gastos por mês em ' + year + '" xmlns="http://www.w3.org/2000/svg">';
 
     [0, 0.5, 1].forEach(function(frac){
       var y = baseY - frac * plotH;
@@ -2047,7 +2047,7 @@
     data.forEach(function(d, i){
       var x0 = padL + i * slot + offset;
       var hi = barH(d.inc), he = barH(d.exp);
-      var tip = escapeHtml(d.full + ': receitas ' + fmtMoney(d.inc) + ' · despesas ' + fmtMoney(d.exp));
+      var tip = escapeHtml(d.full + ': ganhos ' + fmtMoney(d.inc) + ' · gastos ' + fmtMoney(d.exp));
       if(hi > 0) svg += '<rect class="yc-inc" x="' + f(x0) + '" y="' + f(baseY - hi) + '" width="' + barW + '" height="' + f(hi) + '" rx="2"><title>' + tip + '</title></rect>';
       if(he > 0) svg += '<rect class="yc-exp" x="' + f(x0 + barW + gap) + '" y="' + f(baseY - he) + '" width="' + barW + '" height="' + f(he) + '" rx="2"><title>' + tip + '</title></rect>';
       svg += '<text class="yc-label' + (d.has ? '' : ' dim') + '" x="' + f(padL + i * slot + slot / 2) + '" y="' + (H - 7) + '" text-anchor="middle">' + d.label + '</text>';
@@ -2055,7 +2055,7 @@
     svg += '</svg>';
 
     wrap.innerHTML = svg +
-      '<div class="year-legend"><span><i class="yc-inc"></i>Receitas</span><span><i class="yc-exp"></i>Despesas</span></div>';
+      '<div class="year-legend"><span><i class="yc-inc"></i>Ganhos</span><span><i class="yc-exp"></i>Gastos</span></div>';
     return wrap;
   }
 
