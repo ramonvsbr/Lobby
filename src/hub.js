@@ -48,7 +48,7 @@ function stats(){
   var semana = [], treinosSemana = 0;
   for(var i = 0; i < 7; i++){ var k = iso(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+i)); semana.push({ k:k, on:!!set[k] }); if(days[k]) treinosSemana += days[k].t; }
   return { today:today, xp:xp, lvl:lvl, base:base, next:next, streak:cur, best:best, semana:semana, treinosSemana:treinosSemana,
-    totalTreinos:hist.length, diasMeta:diasMeta, nGastos:nGastos, meta:meta, ml:hoje.ml, treinou:hoje.t>0, gastou:hoje.gasto>0,
+    totalTreinos:hist.length, refeicoesHoje:(hoje.diet || 0), diasMeta:diasMeta, nGastos:nGastos, meta:meta, ml:hoje.ml, treinou:hoje.t>0, gastou:hoje.gasto>0,
     gastoHojeC:gastoHojeC, gastoMesC:gastoMesC, emAndamento:!!J('maromba_sessao_ativa', null) };
 }
 var TITULOS = ['Iniciante','Aprendiz','Constante','Focado','Disciplinado','Imparável','Lenda'];
@@ -64,20 +64,26 @@ var BADGES = [
 /* ---------- apps (registro) ---------- */
 var I_DUMB = '<svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
 var I_WALLET = '<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5z"/><circle cx="16" cy="13.5" r="1"/></svg>';
+var I_DROP = '<svg viewBox="0 0 24 24"><path d="M12 2.5c2.8 3.6 7 9.4 7 13a7 7 0 1 1-14 0c0-3.6 4.2-9.4 7-13z"/></svg>';
 var APPS = [
   { id:'maromba', nome:'Maromba', cor:'var(--tile-yellow)', icone:I_DUMB, url:'apps/maromba/index.html',
     resumo:function(s){ return s.emAndamento ? 'Treino em andamento' : s.treinosSemana + (s.treinosSemana === 1 ? ' treino' : ' treinos') + ' na semana'; },
     aba:function(s){ return s.emAndamento ? 'sessao' : null; } },
   { id:'saldo', nome:'Saldo', cor:'var(--tile-blue)', icone:I_WALLET, url:'apps/saldo/index.html',
-    resumo:function(s){ return s.gastoHojeC ? 'Hoje: ' + money(s.gastoHojeC) : 'Nada gasto hoje'; } }
+    resumo:function(s){ return s.gastoHojeC ? 'Hoje: ' + money(s.gastoHojeC) : 'Nada gasto hoje'; } },
+  { id:'nutri', nome:'Nutri', cor:'var(--tile-yellow)', icone:I_DROP, url:'apps/nutri/index.html',
+    resumo:function(s){ return s.ml + '/' + s.meta + ' ml · ' + s.refeicoesHoje + ' ref.'; },
+    aba:function(s){ return s.ml < s.meta ? 'agua' : 'dieta'; } }
 ];
 
 /* ---------- ações ---------- */
-function abrir(id, aba){
+function abrir(id, aba, ev){
   var a = APPS.filter(function(x){ return x.id === id; })[0]; if(!a) return;
   if(id === 'maromba' && aba){ try{ sessionStorage.setItem('maromba_aba_atual', aba); }catch(e){} }
-  document.body.style.transition = 'opacity .15s'; document.body.style.opacity = '0';
-  setTimeout(function(){ location.href = a.url; }, 140);
+  if(id === 'nutri' && aba){ try{ sessionStorage.setItem('nutri_aba_atual', aba); }catch(e){} }
+  /* portal: círculo da cor do app a partir do toque (shared/bridge.js); sem ele, navega direto */
+  if(window.LobbyPortal) LobbyPortal.sair(id, ev, function(){ location.href = a.url; });
+  else location.href = a.url;
 }
 var toastT;
 function toast(msg, undo){
@@ -158,7 +164,7 @@ function render(){
     '<section class="card"><h2>Missões de hoje</h2>' + tarefas.map(function(q){
       return '<div class="q' + (q.ok ? ' done' : '') + '"><div class="chk">' + (q.ok ? CHECK : '') + '</div><div class="t"><b>' + q.t + '</b><span>' + q.d + '</span></div>' + (q.btn || '<span class="xp">+' + q.xp + ' XP</span>') + '</div>';
     }).join('') + (todas ? '<div class="all">Dia completo ✨</div>' : '') + '</section>' +
-    '<section><div class="apps">' + APPS.map(function(a){ return '<button class="app" style="background:' + a.cor + '" data-go="' + a.id + '" data-aba="' + (a.aba && a.aba(s) || '') + '"><span class="ico">' + a.icone + '</span><span><b>' + a.nome + '</b><span>' + a.resumo(s) + '</span></span></button>'; }).join('') + '</div></section>' +
+    '<section><div class="apps">' + APPS.map(function(a){ return '<button class="app" style="background:' + a.cor + '" data-go="' + a.id + '" data-aba="' + (a.aba && a.aba(s) || '') + '"><span class="ico">' + a.icone + '</span><span><b>' + a.nome + '</b></span></button>'; }).join('') + '</div></section>' +
     '<section class="card"><h2>Conquistas <button class="link" data-badges>' + feitas + '/' + BADGES.length + ' · ver</button></h2></section>';
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ var f = document.querySelector('.ring .fg'); if(f) f.setAttribute('stroke-dashoffset', f.getAttribute('data-off')); }); });
   var visto = parseInt(localStorage.getItem('lobby_nivel_visto'), 10);
@@ -168,7 +174,7 @@ function render(){
 
 document.addEventListener('click', function(e){
   var t = e.target.closest('[data-go],[data-agua],[data-badges],[data-info],[data-fechar]'); if(!t) return;
-  if(t.hasAttribute('data-go')) abrir(t.getAttribute('data-go'), t.getAttribute('data-aba') || null);
+  if(t.hasAttribute('data-go')) abrir(t.getAttribute('data-go'), t.getAttribute('data-aba') || null, e);
   else if(t.hasAttribute('data-agua')) addAgua();
   else if(t.hasAttribute('data-info')) ajuda(true);
   else if(t.hasAttribute('data-fechar')) ajuda(false);

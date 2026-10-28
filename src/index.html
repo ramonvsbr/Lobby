@@ -10,6 +10,7 @@
 <link rel="preload" href="fonts/Fredoka.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="fonts/PlusJakartaSans.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="shared/theme.css">
+<script src="shared/bridge.js"></script>
 <style>
 @font-face{font-family:'Plus Jakarta Sans';src:url('fonts/PlusJakartaSans.ttf') format('truetype');font-weight:200 800;font-display:block}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -75,15 +76,16 @@ h1,h2,h3,.p-title,.ring b,.app b,.hh,.st b,.act,.back{font-family:var(--font-dis
 .all{margin-top:12px;text-align:center;font-family:var(--font-display);font-weight:600;color:var(--moss);font-size:16px}
 
 /* ---- cartões dos apps ---- */
-.apps{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.app{border-radius:var(--radius-lg);padding:16px;text-align:left;display:grid;gap:14px;min-height:140px;align-content:space-between;border:2px solid var(--line);box-shadow:var(--lift);transition:transform .12s var(--ease),box-shadow .12s var(--ease)}
+.apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.app{border-radius:var(--radius-lg);padding:12px;text-align:left;display:grid;gap:10px;min-height:112px;align-content:space-between;min-width:0;border:2px solid var(--line);box-shadow:var(--lift);transition:transform .12s var(--ease),box-shadow .12s var(--ease)}
 .app:active{transform:translateY(3px);box-shadow:none}
 .app[data-go="maromba"]{background:var(--tile-green) !important;border-color:var(--chalk-dim);box-shadow:0 4px 0 var(--chalk-dim)}
 .app[data-go="saldo"]{background:var(--gold-soft) !important;border-color:#E3C375;box-shadow:0 4px 0 #E3C375}
+.app[data-go="nutri"]{background:var(--tile-yellow) !important;border-color:var(--line-strong);box-shadow:0 4px 0 var(--line-strong)}
 .app:active{box-shadow:none !important}
-.app .ico{width:48px;height:48px;border-radius:16px;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center}
-.app b{display:block;font-size:19px;font-weight:600}
-.app span{display:block;font-size:13px;color:var(--text-muted);margin-top:2px}
+.app .ico{width:40px;height:40px;border-radius:14px;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center}
+.app b{display:block;font-size:16px;font-weight:600;line-height:1.2}
+.app span{display:block;font-size:11px;line-height:1.25;color:var(--text-muted);margin-top:2px;overflow-wrap:anywhere}
 .link{font-weight:700;color:var(--text);text-transform:none;letter-spacing:0;font-size:13px}
 
 /* ---- aviso e janela ---- */

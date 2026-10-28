@@ -52,7 +52,7 @@ A tela inicial mostra só o que importa do dia:
 - **Sequência** de dias seguidos e a semana em bolinhas.
 - **Missões do dia:** treinar, bater a meta de água e lançar um gasto.
 - **Ação rápida:** +250 ml de água direto do hub, com "Desfazer".
-- **Cartões dos apps** com um resumo (treinos na semana, gasto de hoje).
+- **Cartões dos apps** com um resumo (treinos na semana, gasto de hoje, água e refeições de hoje).
 - **Conquistas** com o andamento de cada uma.
 - Botão **?** com a tela **Como funciona**: regras de XP, níveis, missões e conquistas.
 
@@ -73,13 +73,19 @@ Refeição e gasto contam uma vez por dia. O nível é `floor(√(XP / 50)) + 1`
 
 ### Maromba
 
-Treino e hábitos do dia a dia.
+Só treino. A barra de baixo é **Biblioteca · Home · Histórico**.
 
-- Treinos, sessão em andamento, histórico e recordes.
-- Mapa muscular.
-- Água com meta diária e lembretes.
-- Dieta com a tabela TACO.
-- Backup em JSON.
+- Treinos, sessão em andamento (com descanso e notificação de fim), histórico e recordes.
+- Biblioteca de exercícios, equipamentos e mapa muscular.
+- Backup em JSON (só dados de treino).
+
+### Nutri
+
+Dieta e água.
+
+- **Dieta:** refeições do dia com a tabela TACO, alimentos favoritos e personalizados, metas de calorias e macros, repetir refeições de outro dia.
+- **Água:** meta diária, medidas rápidas e lembretes.
+- Backup em JSON (só dieta e água). Backups antigos do Maromba também servem: o Nutri aproveita só essa parte.
 
 ### Saldo
 
@@ -151,7 +157,8 @@ src/
   shared/bridge.js        ponte dos apps com o hub (tema e botão ‹ Lobby)
   fonts/
   apps/
-    maromba/              app Maromba
+    maromba/              app Maromba (treino)
+    nutri/                app Nutri (dieta e água)
     saldo/                app Saldo
 android/                  projeto Android (Capacitor)
 .github/workflows/        build e release do APK
@@ -173,7 +180,7 @@ Cada app é uma **página separada**, e a navegação é por `location.href`. As
 4. Faça o botão voltar do Android, na tela inicial do app, ir para `../../index.html`.
 5. Registre o app no array `APPS` em `src/hub.js`.
 
-Se o app agendar notificações, reserve uma faixa de ids própria. O Maromba usa `900` e `1000–1999`, e o Saldo usa ids por hash. Detalhes em [`lobby.md`](lobby.md).
+Se o app agendar notificações, reserve uma faixa de ids própria. O Maromba usa `900` (fim do descanso), o Nutri usa `1000–1999` (lembretes de água) e o Saldo usa ids por hash. Detalhes em [`lobby.md`](lobby.md).
 
 ## Problemas comuns
 
@@ -189,4 +196,5 @@ Se o app agendar notificações, reserve uma faixa de ids própria. O Maromba us
 
 - [`lobby.md`](lobby.md): arquitetura, regras do XP, dados, notificações, build e pendências.
 - [`docs/maromba.md`](docs/maromba.md): detalhes do Maromba.
+- `docs/nutri.md`: detalhes do Nutri (ainda por escrever; hoje o que vale está no `lobby.md`).
 - [`docs/saldo.md`](docs/saldo.md): detalhes do Saldo.

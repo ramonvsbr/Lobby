@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Nutri - dieta e água</title>
+  <meta name="theme-color" content="#ECEBE3"/>
+  <script>document.documentElement.setAttribute('data-theme','light');</script>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="../../shared/theme.css"/>
+  <script src="../../shared/bridge.js"></script>
+  
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <div>
+          <span class="brand-word">NUTRI</span>
+          <span class="brand-tag">comer bem, beber mais</span>
+        </div>
+      </div>
+      <div class="sidebar-nav bottom-nav">
+        <div class="nav-group nav-hide-mobile">Rotina</div>
+        <button aria-label="Dieta" title="Dieta" class="nav-btn nav-item active" data-tab="dieta">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M6 2v6a2 2 0 0 0 4 0V2"/><path d="M8 2v20"/><path d="M18 2c-2.2 0-3.5 2.5-3.5 6.5S15.8 15 18 15"/><path d="M18 2v20"/></svg>
+          <span class="nav-label">Dieta</span>
+        </button>
+        <button aria-label="Água" title="Água" class="nav-btn nav-item" data-tab="agua">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2.5c2.8 3.6 7 9.4 7 13a7 7 0 1 1-14 0c0-3.6 4.2-9.4 7-13z"/></svg>
+          <span class="nav-label">Água</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <button class="nav-btn-config" id="btn-config">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.55V19.6a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.98 18a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87A1.7 1.7 0 0 0 3.07 12.5H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 7.4a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 3.04a1.7 1.7 0 0 0 1.03-1.55V1.4a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.02 3a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.35 7.4c.29.63.9 1.05 1.58 1.1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+          <span>Ajustes</span>
+        </button>
+      </div>
+    </nav>
+
+    <main id="app" class="main"></main>
+
+  </div>
+
+  <div id="modal-config" class="modal-overlay" hidden>
+    <div class="modal-panel modal-panel-lg">
+      <div class="modal-header">
+        <h1>Ajustes</h1>
+        <button class="modal-close" id="btn-close-config" title="Fechar">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="sub">Backup e restauração de dieta e água, salvos neste aparelho.</p>
+      <div id="config-mount"></div>
+    </div>
+  </div>
+
+  <div id="modal-refeicao" class="modal-overlay" hidden>
+    <div class="modal-panel modal-panel-lg">
+      <button class="modal-close" id="btn-close-refeicao" title="Fechar">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="refeicao-mount"></div>
+    </div>
+  </div>
+
+  <div id="modal-alimento-custom" class="modal-overlay" hidden>
+    <div class="modal-panel modal-panel-lg">
+      <button class="modal-close" id="btn-close-alimento-custom" title="Fechar">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="alimento-custom-mount"></div>
+    </div>
+  </div>
+
+  <div id="modal-meta-dieta" class="modal-overlay" hidden>
+    <div class="modal-panel">
+      <button class="modal-close" id="btn-close-meta-dieta" title="Fechar">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="meta-dieta-mount"></div>
+    </div>
+  </div>
+
+  <div id="modal-agua-config" class="modal-overlay" hidden>
+    <div class="modal-panel">
+      <button class="modal-close" id="btn-close-agua-config" title="Fechar">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="agua-config-mount"></div>
+    </div>
+  </div>
+
+  <div id="modal-confirm" class="modal-overlay confirm-overlay" hidden>
+    <div class="modal-panel modal-panel-sm">
+      <p id="confirm-msg" class="confirm-msg"></p>
+      <div class="actions-row confirm-actions">
+        <button id="btn-confirm-ok" class="btn btn-danger">Confirmar</button>
+        <button id="btn-confirm-cancel" class="btn btn-ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="input-importar-json" accept="application/json" hidden/>
+
+  <script src="taco.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

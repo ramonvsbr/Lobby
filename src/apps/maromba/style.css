@@ -231,10 +231,6 @@ select{
 }
 select:focus{ background-color: var(--surface); }
 
-/* "Meta de dias na academia" (cartão Sua semana) */
-.semana-meta-sel{ display:block; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
-.semana-meta-sel .hint{ display:block; margin-bottom:6px; }
-.semana-meta-sel select{ width:100%; max-width:340px; }
 
 .field-row{ margin-bottom: 16px; }
 .field-row-inline{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; }
@@ -884,19 +880,6 @@ select:focus{ background-color: var(--surface); }
 .today-rows{ display:grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
 .today-rows .today-row:nth-child(2){ border-top:none; }
 
-.home-semana h2{ margin-bottom:8px; }
-.semana-titulo{ font-size:17px; font-weight:800; color: var(--text); margin-bottom:10px; }
-.home-semana .today-bar{ margin: 0 0 14px; }
-.semana-dias{ display:flex; gap:8px; }
-.semana-dia{
-  flex:1 1 0; max-width:44px; aspect-ratio:1; border-radius:50%;
-  display:grid; place-items:center; font-size:13px; font-weight:700;
-  border:1px solid var(--line); background: var(--surface-2); color: var(--text-muted);
-}
-.semana-dia.feito{ background: var(--chalk); border-color: var(--chalk); color: var(--chalk-ink); font-weight:800; }
-.semana-dia.hoje{ box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
-.semana-seq{ margin:12px 0 0; }
-
 /* ---------- mapa corporal ---------- */
 .bodymap-mount{ width: 170px; flex-shrink:0; }
 .bodymap-mount.small{ width: 148px; }
@@ -1133,26 +1116,23 @@ select:focus{ background-color: var(--surface); }
     box-shadow:0 -2px 10px rgba(0,0,0,.05);
   }
   .nav-btn.nav-item{
-    flex:1; height:40px; max-width:56px; min-width:0; min-height:0; padding:0;
-    border:none; border-radius:100px; display:flex; align-items:center; justify-content:center;
+    flex:1; height:50px; max-width:84px; min-width:0; min-height:0; padding:0;
+    border:none; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;
     background:transparent; color:var(--text-muted); transition:color .15s ease;
     -webkit-tap-highlight-color: transparent;
   }
   .nav-btn.nav-item:hover{ background:transparent; color:var(--text); }
   .nav-btn.nav-item .icon{ width:20px; height:20px; transition:transform .15s ease, color .15s ease; }
-  .sidebar-nav .nav-btn .nav-label{ display:none; }
+  .sidebar-nav .nav-btn .nav-label{ display:block; font-size:10px; font-weight:600; line-height:1; margin-top:3px; }
   .nav-btn.nav-item.active{ background:var(--surface-2); color:var(--text); }
-  .sidebar-nav [data-tab="dieta"]{ order:1; }
-  .sidebar-nav [data-tab="agua"]{ order:2; }
-  .sidebar-nav [data-tab="meus-treinos"]{ order:3; }
-  .sidebar-nav [data-tab="exercicios"]{ order:4; }
-  .sidebar-nav [data-tab="historico"]{ order:5; }
+  .sidebar-nav [data-tab="exercicios"]{ order:1; }
+  .sidebar-nav [data-tab="meus-treinos"]{ order:2; }
+  .sidebar-nav [data-tab="historico"]{ order:3; }
   .nav-btn.nav-home-center{
-    position:relative; top:0; flex:0 0 42px; width:42px; height:42px; max-width:42px;
-    border-radius:50%; background:var(--surface-2); border:1px solid var(--line);
+    position:relative; top:0; flex:1; width:auto; height:50px; max-width:84px;
+    border-radius:16px; background:var(--surface-2); border:1px solid var(--line);
     color:var(--text-muted); box-shadow:none; transition:all .15s ease;
   }
-  .nav-btn.nav-home-center.active{ background:var(--chalk); border-color:var(--chalk); color:var(--chalk-ink); }
   .nav-btn.nav-home-center:active{ transform:scale(.94); }
   .nav-group{ display:none; }
   .nav-hide-mobile{ display:none; }
@@ -1313,3 +1293,6 @@ select:focus{ background-color: var(--surface); }
 }
 :root[data-theme="dark"] .theme-toggle .icon-sun{ display:block; }
 :root[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
+
+/* botão "Adicionar treino" abaixo dos cards, largura total da lista */
+.btn-add-treino{ display:flex; align-items:center; justify-content:center; width:100%; margin-top:14px; }

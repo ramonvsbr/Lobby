@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Maromba - controle de treino</title>
+  <title>Maromba - treino</title>
   <meta name="theme-color" content="#ECEBE3"/>
   <script>
   (function(){
@@ -28,23 +28,13 @@
       </div>
       <div class="sidebar-nav bottom-nav">
         <div class="nav-group nav-hide-mobile">Treino</div>
-        <button aria-label="Home" title="Home" class="nav-btn nav-item nav-home-center active" data-tab="meus-treinos">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-          <span class="nav-label">Home</span>
-        </button>
-        <div class="nav-group nav-hide-mobile">Rotina</div>
-        <button aria-label="Dieta" title="Dieta" class="nav-btn nav-item" data-tab="dieta">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M6 2v6a2 2 0 0 0 4 0V2"/><path d="M8 2v20"/><path d="M18 2c-2.2 0-3.5 2.5-3.5 6.5S15.8 15 18 15"/><path d="M18 2v20"/></svg>
-          <span class="nav-label">Dieta</span>
-        </button>
-        <button aria-label="Água" title="Água" class="nav-btn nav-item" data-tab="agua">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2.5c2.8 3.6 7 9.4 7 13a7 7 0 1 1-14 0c0-3.6 4.2-9.4 7-13z"/></svg>
-          <span class="nav-label">Água</span>
-        </button>
-        <div class="nav-group nav-hide-mobile">Biblioteca</div>
         <button aria-label="Biblioteca" title="Biblioteca" class="nav-btn nav-item" data-tab="exercicios">
           <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
           <span class="nav-label">Biblioteca</span>
+        </button>
+        <button aria-label="Home" title="Home" class="nav-btn nav-item nav-home-center active" data-tab="meus-treinos">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+          <span class="nav-label">Home</span>
         </button>
         <button aria-label="Histórico" title="Histórico" class="nav-btn nav-item" data-tab="historico">
           <svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 3"/></svg>
@@ -99,42 +89,6 @@
     </div>
   </div>
 
-  <div id="modal-refeicao" class="modal-overlay" hidden>
-    <div class="modal-panel modal-panel-lg">
-      <button class="modal-close" id="btn-close-refeicao" title="Fechar">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <div id="refeicao-mount"></div>
-    </div>
-  </div>
-
-  <div id="modal-alimento-custom" class="modal-overlay" hidden>
-    <div class="modal-panel modal-panel-lg">
-      <button class="modal-close" id="btn-close-alimento-custom" title="Fechar">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <div id="alimento-custom-mount"></div>
-    </div>
-  </div>
-
-  <div id="modal-meta-dieta" class="modal-overlay" hidden>
-    <div class="modal-panel">
-      <button class="modal-close" id="btn-close-meta-dieta" title="Fechar">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <div id="meta-dieta-mount"></div>
-    </div>
-  </div>
-
-  <div id="modal-agua-config" class="modal-overlay" hidden>
-    <div class="modal-panel">
-      <button class="modal-close" id="btn-close-agua-config" title="Fechar">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <div id="agua-config-mount"></div>
-    </div>
-  </div>
-
   <div id="modal-confirm" class="modal-overlay confirm-overlay" hidden>
     <div class="modal-panel modal-panel-sm">
       <p id="confirm-msg" class="confirm-msg"></p>
@@ -148,7 +102,6 @@
   <input type="file" id="input-importar-json" accept="application/json" hidden/>
 
   <script src="data.js"></script>
-  <script src="taco.js"></script>
   <script src="bodymap.js"></script>
   <script src="app.js"></script>
 </body>

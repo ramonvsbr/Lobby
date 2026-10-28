@@ -4,7 +4,7 @@ Documento para quem for mexer no código (eu mesmo no futuro ou uma IA): o que �
 
 ## O que é
 
-App Android pessoal (Capacitor 8, HTML/CSS/JS puros, sem bundler) que reúne mini-apps. Nasceu da fusão de dois projetos separados, **Maromba** e **Saldo**, para manter o visual padronizado. Uso pessoal, sem backend: todos os dados ficam em `localStorage` no aparelho.
+App Android pessoal (Capacitor 8, HTML/CSS/JS puros, sem bundler) que reúne mini-apps: **Maromba** (treino), **Nutri** (dieta e água) e **Saldo** (finanças). Nasceu da fusão de projetos separados para manter o visual padronizado; o Nutri foi separado do Maromba depois. Uso pessoal, sem backend: todos os dados ficam em `localStorage` no aparelho.
 
 - `appId`: `br.com.ramon.lobby`. Nome exibido: **Lobby**.
 - O `namespace` do `android/app/build.gradle` e o `package` do `MainActivity.java` precisam ser iguais entre si.
@@ -23,7 +23,8 @@ src/shared/bridge.js        força o tema claro e injeta o botão "‹ Lobby"
 
 - Voltar: o botão voltar do Android, na tela inicial de cada app, faz `window.location.href = '../../index.html'` (antes chamava `exitApp`). No hub, o voltar fecha o app.
 - Como o hub é uma página à parte, ele recalcula tudo em `pageshow` e `visibilitychange`.
-- Deep link para o Maromba: o hub grava `sessionStorage['maromba_aba_atual']` antes de navegar (abas válidas: `sessao`, `meus-treinos`, `agua`, ...).
+- Deep link: o hub grava `sessionStorage['maromba_aba_atual']` (abas: `sessao`, `meus-treinos`, `exercicios`, `historico`) ou `sessionStorage['nutri_aba_atual']` (`dieta`, `agua`) antes de navegar.
+- Portal: a transição hub ⇄ app (círculo da cor do app + ícone) vive em `shared/bridge.js` e na seção 10 do `theme.css`. Cada app novo precisa de cor e ícone ali (`--portal-<id>`, `--emb-<id>`).
 - `copiar-www.js` copia `src/` para `www/`. `npm run sync` = `node copiar-www.js && npx cap sync`.
 
 ## Tema e visual
@@ -51,9 +52,9 @@ Tudo é **calculado a cada abertura** a partir dos dados dos apps (nada de XP sa
 | Chave | Conteúdo |
 | --- | --- |
 | `maromba_historico` | treinos feitos: `{ data, recordes, ... }` |
-| `maromba_agua` | `{ id, data, horario, ml }` |
+| `maromba_agua` | `{ id, data, horario, ml }` (Nutri; o hub também grava aqui no "+250") |
 | `maromba_agua_config` | `{ metaMl, ... }` (padrão 2000) |
-| `maromba_dieta` | refeições: `{ id, data, horario, nome, ingredientes }` |
+| `maromba_dieta` | refeições (usada pelo **Nutri**): `{ id, data, horario, nome, ingredientes }` |
 | `maromba_sessao_ativa` | treino em andamento |
 | `saldo-dados` | estado do Saldo (ver abaixo) |
 | `maromba_tema`, `saldo_theme`, `lobby_tema` | sempre `light` |
@@ -74,13 +75,16 @@ Datas são `YYYY-MM-DD` na hora **local**. Valores em dinheiro do Saldo são **c
 
 Os dois apps agendam lembretes no mesmo pacote, então os ids **não podem colidir** nem um apagar os do outro:
 
-- Maromba usa o id `900` e a faixa `1000–1999`.
+- Maromba usa só o id `900` (fim do descanso).
+- Nutri usa a faixa `1000–1999` (lembretes de água).
+- O Nutri reagenda os lembretes ao abrir; se você não abrir o Nutri depois da atualização, os lembretes já agendados continuam valendo.
 - Saldo usa ids por hash (até 2147483000).
 - O `cancelAll` do Saldo (`notificacoes.js`) filtra e **preserva** os ids do Maromba. Se criar outro app com lembretes, defina uma faixa própria e faça o mesmo filtro.
 
 ## Alterações feitas nos apps originais
 
 - Botão voltar leva ao hub em vez de fechar o app.
+- Maromba: Dieta e Água saíram para o app **Nutri** (as chaves `maromba_*` foram mantidas de propósito, sem migração). Backups de cada app guardam só o seu pedaço; o importador do Nutri aceita backups antigos do Maromba.
 - Maromba: `todayISO()` e `shiftDateISO()` usavam `toISOString()` (UTC), o que virava o dia às 21h no Brasil. Agora usam `dataLocalISO()`.
 - Saldo: `cancelAll` preserva os lembretes do Maromba; nova regra do saldo atual; botão **i**; "voltar ao automático".
 - `@capacitor/app` foi adicionado (o Maromba usava o plugin sem tê-lo instalado).
