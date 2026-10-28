@@ -917,3 +917,16 @@ section.book.income .book-icon { background: var(--moss-soft); color: var(--moss
 .stat-card.saldo{ position:relative; }
 .stat-info{ position:absolute; top:6px; right:6px; width:22px; height:22px; padding:0; border-radius:50%; border:1px solid var(--line); background:var(--surface-2); color:var(--text-muted); font-family:inherit; font-size:12px; font-weight:800; line-height:1; cursor:pointer; display:grid; place-items:center; }
 .stat-info:active{ background:var(--surface-3); }
+/* Rótulo "assinatura": destaque leve em violeta (diferente do amarelo de recorrente/parcelas) */
+.chip-badge.chip-sub {
+  background: rgba(107,79,216,.12); border-color: rgba(107,79,216,.45); color: #6B4FD8; font-weight: 700;
+}
+.chip-badge.chip-sub:hover { border-color: rgba(107,79,216,.45); color: #6B4FD8; }
+.entry-item:hover .chip-badge.chip-sub,
+.entry-item:focus-within .chip-badge.chip-sub { background: rgba(107,79,216,.16); }
+:root[data-theme="dark"] .chip-badge.chip-sub {
+  background: rgba(169,155,255,.16); border-color: rgba(169,155,255,.5); color: #B9AEFF;
+}
+:root[data-theme="dark"] .chip-badge.chip-sub:hover { border-color: rgba(169,155,255,.5); color: #B9AEFF; }
+:root[data-theme="dark"] .entry-item:hover .chip-badge.chip-sub,
+:root[data-theme="dark"] .entry-item:focus-within .chip-badge.chip-sub { background: rgba(169,155,255,.22); }

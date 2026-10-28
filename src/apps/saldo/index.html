@@ -71,6 +71,7 @@
       <div class="wrap" id="app">
         <header class="top-bar">
           <div class="top-bar-title">
+            <h1 id="pageTitle">Gastos do dia</h1>
           </div>
         </header>
 
@@ -279,6 +280,11 @@
         </div>
         <p class="hint" id="qTipoHint"></p>
       </div>
+      <div id="qAssinaturaBlock" style="display:none;">
+        <div class="opt-row">
+          <label class="opt-chip"><input type="checkbox" id="qAssinatura"><span>Assinatura</span></label>
+        </div>
+      </div>
       <div class="field-row">
         <label class="field field-small"><span>Dia</span><input id="qDia" type="number" min="1" max="31" inputmode="numeric"></label>
         <label class="field field-small" id="qParcelasField" style="display:none;"><span>Parcelas</span><input id="qParcelas" type="number" min="2" max="60" inputmode="numeric" placeholder="Ex.: 12"></label>
@@ -304,8 +310,6 @@
       </div>
     </form>
   </div>
-
-  <div class="save-flag" id="saveFlag">salvo ✓</div>
 
   <!-- Modal de Confirmação -->
   <div class="modal-overlay" id="modalOverlay">

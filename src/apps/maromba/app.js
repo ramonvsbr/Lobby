@@ -570,7 +570,6 @@ function renderEquipamentosAbaHTML() {
             </label>`).join('')}
         </div>
         <p class="hint" style="margin-top: 12px;">Exercícios que usam só o peso do corpo continuam disponíveis mesmo sem marcar nada.</p>
-        <div id="equip-saved" class="saved-flag" hidden>Salvo ✓</div>
       </div>
     </div>`;
 }

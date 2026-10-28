@@ -910,6 +910,12 @@
     return chip;
   }
 
+  /* Rótulo "assinatura" (row.subscription): só aparece nos itens cadastrados como assinatura
+     (checkbox "Assinatura" ao adicionar). Somente exibição. */
+  function buildSubscriptionChip(){
+    return el('span', 'chip-badge static chip-sub', 'assinatura');
+  }
+
   /* Tipos de item (mutuamente exclusivos, definidos ao adicionar e só exibidos no cartão):
      - recorrente (∞): copiado para os próximos meses
      - parcelado: mostra o número de parcelas e em qual parcela o mês está
@@ -920,6 +926,7 @@
     if(kind === 'expenses'){
       var monthVal = row.values && row.values[state.selectedMonth];
       if(typeof monthVal === 'number' && !isNaN(monthVal)) tags.appendChild(buildPaidChip(row));
+      if(row.subscription && !isInstallment(row)) tags.appendChild(buildSubscriptionChip());
     }
 
     var instTotal = row.instTotal || 1;
@@ -1199,6 +1206,7 @@
   var qItem = document.getElementById('qItem');
   var qDia = document.getElementById('qDia');
   var qParcelas = document.getElementById('qParcelas');
+  var qAssinatura = document.getElementById('qAssinatura');
   var quickTipo = 'once'; // once (avulso) | recurring | installments (só no Mensal)
 
   var TIPO_HINTS = {
@@ -1216,6 +1224,11 @@
     var hint = document.getElementById('qTipoHint');
     if(hint) hint.textContent = TIPO_HINTS[t] || '';
   }
+
+  // assinatura costuma ser mensal: ao marcar, um item "avulso" passa a "recorrente"
+  if(qAssinatura) qAssinatura.addEventListener('change', function(){
+    if(qAssinatura.checked && quickTipo === 'once') setQuickTipo('recurring');
+  });
 
   var qTipoGroup = document.getElementById('qTipo');
   if(qTipoGroup) qTipoGroup.addEventListener('change', function(e){
@@ -1245,6 +1258,10 @@
     var tipoBlock = document.getElementById('qTipoBlock');
     if(tipoBlock) tipoBlock.style.display = quickMode === 'mensal' ? '' : 'none';
     setQuickTipo(isInc ? 'recurring' : 'once');
+    // rótulo "assinatura": só para despesas do Mensal
+    var assBlock = document.getElementById('qAssinaturaBlock');
+    if(assBlock) assBlock.style.display = (quickMode === 'mensal' && !isInc) ? '' : 'none';
+    if(qAssinatura) qAssinatura.checked = false;
     var submitBtn = document.getElementById('quickSubmit');
     if(submitBtn) submitBtn.textContent = quickMode === 'mensal' ? (isInc ? 'Adicionar ganho' : 'Adicionar gasto') : 'Lançar gasto';
     quickOverlay.classList.add('open');
@@ -1286,6 +1303,7 @@
         day = isNaN(day) ? null : Math.max(1, Math.min(31, day));
         var idM = (isInc ? 'r' : 'e') + (state.nextId++);
         var rowM = { id: idM, day: day, item: name, values: {}, instTotal: nParc, instStart: mkM };
+        if(!isInc && qAssinatura && qAssinatura.checked) rowM.subscription = true;
         if(quickTipo === 'installments'){
           for(var pi = 0; pi < nParc; pi++){
             var mp = addMonthsToKey(mkM, pi);
@@ -1554,17 +1572,17 @@
     if(view === 'anual'){
       if(viewAnual) viewAnual.style.display = 'block';
       activateTriggers('anual');
-      if(pageTitle) pageTitle.textContent = 'Balanço do ano';
+      if(pageTitle) pageTitle.textContent = '';
       renderAnual();
     } else if(view === 'diario'){
       if(viewDiario) viewDiario.style.display = 'block';
       activateTriggers('diario');
-      if(pageTitle) pageTitle.textContent = 'Gastos do dia';
+      if(pageTitle) pageTitle.textContent = '';
       renderDiario();
     } else {
       if(viewMensal) viewMensal.style.display = 'block';
       activateTriggers('mensal');
-      if(pageTitle) pageTitle.textContent = 'Contas do mês';
+      if(pageTitle) pageTitle.textContent = '';
       render();
     }
     closeConfig();
