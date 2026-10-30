@@ -37,7 +37,7 @@
 
 ## Sobre
 
-O Lobby reúne meus mini-apps em um só lugar, com visual único (tema claro, paleta verde-floresta) e um toque de jogo sem poluição: nível, XP, sequência de dias e três missões por dia.
+O Lobby reúne meus mini-apps em um só lugar, com visual único (tema escuro e sóbrio, verde-floresta dessaturado, listas em vez de cartões) e um toque de jogo sem poluição: nível, XP, sequência de dias e três missões por dia.
 
 - HTML, CSS e JavaScript puros, sem bundler.
 - Empacotado com [Capacitor](https://capacitorjs.com/) para Android.
@@ -46,14 +46,13 @@ O Lobby reúne meus mini-apps em um só lugar, com visual único (tema claro, pa
 
 ## O hub
 
-A tela inicial mostra só o que importa do dia:
+A tela inicial é um painel enxuto, sem ilustrações, e mostra só o que importa do dia:
 
-- **Nível e XP** em um anel, com o título (Iniciante até Lenda).
-- **Sequência** de dias seguidos e a semana em bolinhas.
-- **Missões do dia:** treinar, bater a meta de água e lançar um gasto.
+- **Topo fixo:** nível, título (Iniciante até Lenda), barra de XP e sequência de dias.
+- **Missões do dia:** treinar, bater a meta de água e lançar um gasto, cada uma com o XP que vale.
 - **Ação rápida:** +250 ml de água direto do hub, com "Desfazer".
-- **Cartões dos apps** com um resumo (treinos na semana, gasto de hoje, água e refeições de hoje).
-- **Conquistas** com o andamento de cada uma.
+- **Apps:** os apps, cada um com um resumo (treinos na semana, gasto de hoje, água e refeições de hoje).
+- **Semana** em quadradinhos e **próxima conquista** com o andamento.
 - Botão **?** com a tela **Como funciona**: regras de XP, níveis, missões e conquistas.
 
 Tudo é **calculado a cada abertura** a partir do que você registrou nos apps. Nenhum XP é salvo à parte, então os números nunca ficam fora de sincronia (e apagar registros reduz o XP).
@@ -73,7 +72,7 @@ Refeição e gasto contam uma vez por dia. O nível é `floor(√(XP / 50)) + 1`
 
 ### Maromba
 
-Só treino. A barra de baixo é **Biblioteca · Home · Histórico**.
+Só treino. A barra de baixo, fixa na borda da tela, é **Biblioteca · Home · Histórico**.
 
 - Treinos, sessão em andamento (com descanso e notificação de fim), histórico e recordes.
 - Biblioteca de exercícios, equipamentos e mapa muscular.
@@ -153,7 +152,7 @@ npx serve src
 ```
 src/
   index.html, hub.js      hub: tela inicial, XP, missões, Como funciona
-  shared/theme.css        tema único: cores, cantos e componentes
+  shared/theme.css        tema único (escuro): cores, cantos e componentes
   shared/bridge.js        ponte dos apps com o hub (tema e botão ‹ Lobby)
   fonts/
   apps/

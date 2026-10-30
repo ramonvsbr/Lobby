@@ -333,52 +333,19 @@
   }
 
   /* ---------- Tema ---------- */
-  var THEME_STORAGE_KEY = 'saldo_theme';
-
-  function getCurrentTheme(){
-    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  }
-
-  /* Barras nativas do Android via SystemBars (@capacitor/core 7.1+).
-     O estilo é pelo FUNDO: 'LIGHT' = fundo claro (ícones escuros),
-     'DARK' = fundo escuro (ícones claros). */
-  function sincronizarBarrasSistema(theme){
+  /* Tema único (escuro): o bridge.js já força data-theme="dark" e grava saldo_theme.
+     Aqui só as barras nativas do Android: fundo escuro => ícones CLAROS ('DARK'). */
+  function sincronizarBarrasSistema(){
     try{
       var cap = window.Capacitor;
       var SB = cap && cap.Plugins && cap.Plugins.SystemBars;
       if(SB && typeof SB.setStyle === 'function'){
-        var r = SB.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
+        var r = SB.setStyle({ style: 'DARK' });
         if(r && typeof r.catch === 'function') r.catch(function(){});
       }
     }catch(e){ /* fora do app nativo: ignora */ }
   }
-
-  function applyTheme(theme){
-    document.documentElement.setAttribute('data-theme', theme);
-    try{ localStorage.setItem(THEME_STORAGE_KEY, theme); }catch(e){}
-
-    var metaThemeColor = document.getElementById('themeColorMeta');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#14213D' : '#F6F8FC');
-    }
-
-    var toggles = document.querySelectorAll('.theme-toggle-btn');
-    for(var i = 0; i < toggles.length; i++){
-      toggles[i].setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-      var label = toggles[i].querySelector('.theme-toggle-label');
-      if(label) label.textContent = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
-    }
-    sincronizarBarrasSistema(theme);
-  }
-
-  var themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
-  for(var ttIdx = 0; ttIdx < themeToggleBtns.length; ttIdx++){
-    themeToggleBtns[ttIdx].addEventListener('click', function(){
-      applyTheme(getCurrentTheme() === 'dark' ? 'light' : 'dark');
-    });
-  }
-
-  applyTheme(getCurrentTheme());
+  sincronizarBarrasSistema();
 
   function persist(){
     clearTimeout(saveTimer);

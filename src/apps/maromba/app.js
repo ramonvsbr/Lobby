@@ -114,26 +114,19 @@ function horaAtualHHMM() {
 // Atenção: o nome do estilo é pelo FUNDO, não pelo ícone:
 //   'LIGHT' = fundo claro  -> ícones ESCUROS
 //   'DARK'  = fundo escuro -> ícones CLAROS
-function sincronizarBarrasSistema(tema) {
+function sincronizarBarrasSistema() {
   try {
     const cap = window.Capacitor;
     const SB = cap && cap.Plugins && cap.Plugins.SystemBars;
     if (SB && typeof SB.setStyle === 'function') {
-      const r = SB.setStyle({ style: tema === 'dark' ? 'DARK' : 'LIGHT' });
+      const r = SB.setStyle({ style: 'DARK' });
       if (r && typeof r.catch === 'function') r.catch(() => {});
     }
   } catch (e) { /* fora do app nativo: ignora */ }
 }
 
-// tema claro/escuro: aplica no <html> (data-theme), ajusta a cor da barra
-// do navegador/Android e sincroniza os ícones das barras nativas.
-// A escolha fica salva em 'maromba_tema' (só neste aparelho; não entra no backup).
-function aplicarTema(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', t === 'dark' ? '#14213D' : '#F6F8FC');
-  sincronizarBarrasSistema(t);
-}
+// Tema único (escuro): o bridge.js já força data-theme="dark". Aqui só as barras nativas.
+function aplicarTema() { sincronizarBarrasSistema(); }
 
 function formatDuration(sec) {
   sec = Math.max(0, Math.round(sec));
@@ -1449,6 +1442,23 @@ function avisoBackupHTML() {
     </div>`;
 }
 
+// Semana (seg a dom) em quadradinhos, igual ao hub. Meta = meta salva ou nº de treinos montados.
+function semanaHTML(hist, nTreinos) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const seg = new Date(hoje); seg.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
+  const feitos = new Set(hist.map(h => h && h.data));
+  const nomes = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+  let n = 0;
+  const dias = nomes.map((nome, i) => {
+    const d = new Date(seg); d.setDate(seg.getDate() + i);
+    const iso = dataLocalISO(d), on = feitos.has(iso);
+    if (on) n++;
+    return `<div class="wd ${on ? 'on' : ''} ${iso === todayISO() ? 'today' : ''}"><i>${on ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</i>${nome}</div>`;
+  }).join('');
+  const meta = getMetaSemana() || nTreinos;
+  return `<div class="home-head"><span>Esta semana</span><span class="tag ${meta && n >= meta ? 'hot' : ''}">${n}${meta ? ' de ' + meta : ''} ${n === 1 ? 'treino' : 'treinos'}</span></div><div class="week-row">${dias}</div>`;
+}
+
 function renderMeusTreinos() {
   const sessaoAtiva = getSessaoAtiva();
   const treinos = getTreinos();
@@ -1469,8 +1479,9 @@ function renderMeusTreinos() {
 
       ${continuarTreinoHTML(sessaoAtiva)}
       ${avisoBackupHTML()}
+      ${semanaHTML(hist, treinos.length)}
 
-      <button type="button" class="btn btn-ghost btn-add-treino" style="margin:0 0 14px;" data-montar>+ Adicionar treino</button>
+      <h2 class="subtitle">Meus treinos</h2>
 
       ${treinos.length ? `
         <div class="treino-grid">
@@ -1479,10 +1490,12 @@ function renderMeusTreinos() {
         <div class="empty-state">
           <div class="empty-ico">${ICO_DUMBBELL}</div>
           <div>
-            <strong>Você ainda não tem nenhum treino montado.</strong>
+            <strong>Nenhum treino montado</strong>
+            <span>Monte o primeiro para começar a contar a semana.</span>
           </div>
         </div>`}
 
+      <button type="button" class="btn btn-add-treino" data-montar>Adicionar treino</button>
     </section>`;
 
   APP.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => iniciarSessao(b.dataset.start)));
@@ -1520,8 +1533,8 @@ function treinoCardHTML(t) {
           <span class="treino-card-meta">${qtdEx} ${qtdEx === 1 ? 'exercício' : 'exercícios'} · ~${formatDuration(estimSec)}</span>
         </div>
         <div class="treino-card-actions-top">
-          <button type="button" class="btn-icon-subtle" data-edit="${t.id}" title="Editar treino" aria-label="Editar ${escapeHtml(t.nome)}">✏️</button>
-          <button type="button" class="btn-icon-subtle danger" data-del="${t.id}" title="Excluir treino" aria-label="Excluir ${escapeHtml(t.nome)}">🗑️</button>
+          <button type="button" class="btn-icon-subtle" data-edit="${t.id}" title="Editar treino" aria-label="Editar ${escapeHtml(t.nome)}"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+          <button type="button" class="btn-icon-subtle danger" data-del="${t.id}" title="Excluir treino" aria-label="Excluir ${escapeHtml(t.nome)}"><svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
         </div>
       </div>
 
@@ -1531,7 +1544,7 @@ function treinoCardHTML(t) {
         </div>` : ''}
 
       <button type="button" class="btn-iniciar-treino" data-start="${t.id}">
-        <span>▶</span> Iniciar treino
+        <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg>Iniciar treino
       </button>
     </div>`;
 }
@@ -1674,7 +1687,7 @@ function renderSessao() {
             </button>` : ''}
 
           <details class="obs-box" ${cfg.obs ? 'open' : ''}>
-            <summary>📝 Observação${cfg.obs ? ' ✓' : ''}</summary>
+            <summary>Observação${cfg.obs ? ' ✓' : ''}</summary>
             ${obsAnterior ? `<p class="hint obs-anterior">Da última vez (${formatDateBR(obsAnterior.data)}): ${escapeHtml(obsAnterior.obs)}</p>` : ''}
             <textarea id="input-obs" rows="2" maxlength="300" placeholder="Ex.: banco no furo 4, ombro incomodando">${escapeHtml(cfg.obs || '')}</textarea>
           </details>
@@ -1848,16 +1861,16 @@ function renderSessaoResumoFinal(sessao) {
       </div>
       ${recordes.length ? `
         <div class="recorde-box" role="status">
-          <strong>🏆 ${recordes.length === 1 ? 'Novo recorde!' : `${recordes.length} novos recordes!`}</strong>
+          <strong><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M9 20h6"/></svg>${recordes.length === 1 ? 'Novo recorde!' : `${recordes.length} novos recordes!`}</strong>
           ${recordes.map(r => `<span>${escapeHtml(nomeExercicio(r.exercicioId))}: <b>${r.peso} kg</b> (antes ${r.anterior} kg)</span>`).join('')}
         </div>` : ''}
       <div class="draft-list">
         ${sessao.exercicios.map(cfg => {
           const rec = recordes.find(r => r.exercicioId === cfg.exercicioId);
           return `<div class="draft-row">
-            <div class="draft-row-head"><span class="ex-nome">${escapeHtml(nomeExercicio(cfg.exercicioId))}</span>${rec ? `<span class="badge-pr">🏆 ${rec.peso} kg</span>` : ''}</div>
+            <div class="draft-row-head"><span class="ex-nome">${escapeHtml(nomeExercicio(cfg.exercicioId))}</span>${rec ? `<span class="badge-pr"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M9 20h6"/></svg>${rec.peso} kg</span>` : ''}</div>
             ${cfg.sets.length ? cfg.sets.map((s, i) => `<div class="set-line done">Série ${i + 1}: ${s.peso}kg × ${s.reps}</div>`).join('') : '<p class="hint">Nenhuma série registrada.</p>'}
-            ${cfg.obs && cfg.obs.trim() ? `<p class="hint obs-line">📝 ${escapeHtml(cfg.obs.trim())}</p>` : ''}
+            ${cfg.obs && cfg.obs.trim() ? `<p class="hint obs-line">${escapeHtml(cfg.obs.trim())}</p>` : ''}
           </div>`;
         }).join('')}
       </div>
@@ -1891,7 +1904,7 @@ function renderSessaoResumoFinal(sessao) {
     currentTab = 'historico';
     render();
     toast(recordes.length
-      ? `Treino salvo! 🏆 ${recordes.length === 1 ? 'Novo recorde' : `${recordes.length} novos recordes`}`
+      ? `Treino salvo! <svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M9 20h6"/></svg>${recordes.length === 1 ? 'Novo recorde' : `${recordes.length} novos recordes`}`
       : 'Treino salvo no histórico!');
   });
   document.getElementById('btn-descartar-sessao').addEventListener('click', () => {
@@ -1946,7 +1959,7 @@ function renderHistorico() {
         ${PERIODOS_GRAFICO.map(p => `<button type="button" class="tab-btn ${graficoPeriodo === p.id ? 'active' : ''}" data-periodo="${p.id}">${p.label}</button>`).join('')}
       </div>
       <div class="chart-toolbar">
-        <button type="button" id="btn-reset-zoom" class="btn-link" ${graficoZoom ? '' : 'hidden'}>↺ Ver período inteiro</button>
+        <button type="button" id="btn-reset-zoom" class="btn-link" ${graficoZoom ? '' : 'hidden'}>Ver período inteiro</button>
       </div>
       <div class="chart-box">
         <canvas id="chart-canvas" width="640" height="220"></canvas>
@@ -2008,9 +2021,9 @@ function histCardHTML(s) {
           <h3 class="sessao-card-title">${escapeHtml(s.treinoNome || 'Treino')}</h3>
           <span class="sessao-card-meta">${formatDateBR(s.data)} · ${duracao}</span>
         </div>
-        <button type="button" class="btn-icon-subtle danger" data-del-hist="${s.id}" title="Excluir registro" aria-label="Excluir registro">🗑️</button>
+        <button type="button" class="btn-icon-subtle danger" data-del-hist="${s.id}" title="Excluir registro" aria-label="Excluir registro"><svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
       </div>
-      ${s.recordes && s.recordes.length ? `<span class="badge-pr" title="Recordes de carga nesta sessão">🏆 ${s.recordes.length}</span>` : ''}
+      ${s.recordes && s.recordes.length ? `<span class="badge-pr" title="Recordes de carga nesta sessão"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M9 20h6"/></svg>${s.recordes.length}</span>` : ''}
       ${musculos.length ? `<div class="chip-row">${musculos.map(m => `<span class="chip-subtle">${muscleName(m)}</span>`).join('')}</div>` : ''}
       ${aberto ? `
         <div class="draft-list">
@@ -2018,9 +2031,9 @@ function histCardHTML(s) {
             const ex = exerciseById(cfg.exercicioId);
             const rec = (s.recordes || []).find(r => r.exercicioId === cfg.exercicioId);
             return `<div class="draft-row">
-              <div class="draft-row-head"><span class="ex-nome">${ex ? ex.nome : cfg.exercicioId}</span>${rec ? `<span class="badge-pr">🏆 ${rec.peso} kg</span>` : ''}</div>
+              <div class="draft-row-head"><span class="ex-nome">${ex ? ex.nome : cfg.exercicioId}</span>${rec ? `<span class="badge-pr"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M9 20h6"/></svg>${rec.peso} kg</span>` : ''}</div>
               ${cfg.sets.length ? cfg.sets.map((set, i) => `<div class="set-line done">Série ${i + 1}: ${set.peso}kg × ${set.reps}</div>`).join('') : '<p class="hint">Sem séries registradas.</p>'}
-              ${cfg.obs ? `<p class="hint obs-line">📝 ${escapeHtml(cfg.obs)}</p>` : ''}
+              ${cfg.obs ? `<p class="hint obs-line">${escapeHtml(cfg.obs)}</p>` : ''}
             </div>`;
           }).join('')}
         </div>` : ''}
@@ -2078,7 +2091,7 @@ function desenharGrafico(exId) {
   if (min < 0) min = 0;
 
   const styles = getComputedStyle(document.documentElement);
-  const corLinha = styles.getPropertyValue('--chalk').trim() || '#E9BD4A';
+  const corLinha = styles.getPropertyValue('--chalk').trim() || '#6F9A7B';
   const corGrid = styles.getPropertyValue('--line').trim() || '#34373c';
   const corTexto = styles.getPropertyValue('--text-muted').trim() || '#8b8d94';
 
@@ -2162,9 +2175,9 @@ function configurarZoomArrasteCanvas(canvas, ctx, snapshot, pontos, padL, plotW,
   }
   function desenharSelecao(x0, x1) {
     ctx.putImageData(snapshot, 0, 0);
-    ctx.fillStyle = 'rgba(233,189,74,0.16)';
+    ctx.fillStyle = 'rgba(111,154,123,0.16)';
     ctx.fillRect(x0, 0, x1 - x0, H);
-    ctx.strokeStyle = 'rgba(233,189,74,0.65)';
+    ctx.strokeStyle = 'rgba(111,154,123,0.65)';
     ctx.lineWidth = 1;
     ctx.strokeRect(x0 + 0.5, 0.5, Math.max(0, x1 - x0 - 1), H - 1);
   }
@@ -2212,16 +2225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
-  // tema claro/escuro: o <head> já aplicou o tema salvo (ou o do aparelho);
-  // aqui sincronizamos a cor da barra do navegador, os ícones das barras
-  // nativas do Android (aplicarTema -> SystemBars) e ligamos o botão
-  aplicarTema(document.documentElement.dataset.theme || 'light');
-  document.getElementById('btn-tema').addEventListener('click', () => {
-    const novo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    aplicarTema(novo);
-    try { localStorage.setItem('maromba_tema', novo); } catch (e) { /* sem storage */ }
-    if (currentTab === 'historico') render(); // redesenha o gráfico com as cores novas
-  });
+  aplicarTema();
 
   document.getElementById('btn-close-montar').addEventListener('click', closeMontar);
   document.getElementById('btn-config').addEventListener('click', openConfig);

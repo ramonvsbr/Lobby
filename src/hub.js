@@ -52,26 +52,32 @@ function stats(){
     gastoHojeC:gastoHojeC, gastoMesC:gastoMesC, emAndamento:!!J('maromba_sessao_ativa', null) };
 }
 var TITULOS = ['Iniciante','Aprendiz','Constante','Focado','Disciplinado','Imparável','Lenda'];
+var titulo = function(l){ return TITULOS[Math.min(6, Math.floor((l - 1) / 2))]; };
+/* conquistas: n = nome, d = descrição, ok(s) = conquistada?, p(s) = [atual, meta] */
 var BADGES = [
-  ['💪','Primeiro treino','1 treino', function(s){ return s.totalTreinos >= 1; }, function(s){ return [s.totalTreinos, 1]; }],
-  ['🏋️','Rotina','10 treinos', function(s){ return s.totalTreinos >= 10; }, function(s){ return [s.totalTreinos, 10]; }],
-  ['🔥','Semana firme','7 dias seguidos', function(s){ return s.best >= 7; }, function(s){ return [s.best, 7]; }],
-  ['⚡','Mês de ferro','30 dias seguidos', function(s){ return s.best >= 30; }, function(s){ return [s.best, 30]; }],
-  ['💧','Hidratado','7 dias na meta de água', function(s){ return s.diasMeta >= 7; }, function(s){ return [s.diasMeta, 7]; }],
-  ['🧾','No controle','30 gastos lançados', function(s){ return s.nGastos >= 30; }, function(s){ return [s.nGastos, 30]; }]
+  { n:'Primeiro treino', d:'1 treino',                ok:function(s){ return s.totalTreinos >= 1; },  p:function(s){ return [s.totalTreinos, 1]; } },
+  { n:'Rotina',          d:'10 treinos',              ok:function(s){ return s.totalTreinos >= 10; }, p:function(s){ return [s.totalTreinos, 10]; } },
+  { n:'Semana firme',    d:'7 dias seguidos',         ok:function(s){ return s.best >= 7; },          p:function(s){ return [s.best, 7]; } },
+  { n:'Mês de ferro',    d:'30 dias seguidos',        ok:function(s){ return s.best >= 30; },         p:function(s){ return [s.best, 30]; } },
+  { n:'Hidratado',       d:'7 dias na meta de água',  ok:function(s){ return s.diasMeta >= 7; },      p:function(s){ return [s.diasMeta, 7]; } },
+  { n:'No controle',     d:'30 gastos lançados',      ok:function(s){ return s.nGastos >= 30; },      p:function(s){ return [s.nGastos, 30]; } }
 ];
+var cnt = function(b, s){ var p = b.p(s); return Math.min(p[0], p[1]) + '/' + p[1]; };
 
 /* ---------- apps (registro) ---------- */
 var I_DUMB = '<svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
 var I_WALLET = '<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5z"/><circle cx="16" cy="13.5" r="1"/></svg>';
 var I_DROP = '<svg viewBox="0 0 24 24"><path d="M12 2.5c2.8 3.6 7 9.4 7 13a7 7 0 1 1-14 0c0-3.6 4.2-9.4 7-13z"/></svg>';
+var I_FLAME = '<svg viewBox="0 0 24 24"><path d="M12 2s5.2 4.3 5.2 9.6a5.2 5.2 0 0 1-10.4 0c0-1.8.8-3.2 1.9-4.3.2 1.3.9 2.1 1.8 2.4C10.2 6.9 10.7 4.3 12 2z"/></svg>';
+var I_HELP = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg>';
+var I_CHEV = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
 var APPS = [
-  { id:'maromba', nome:'Maromba', cor:'var(--tile-yellow)', icone:I_DUMB, url:'apps/maromba/index.html',
+  { id:'maromba', nome:'Maromba', icone:I_DUMB, url:'apps/maromba/index.html',
     resumo:function(s){ return s.emAndamento ? 'Treino em andamento' : s.treinosSemana + (s.treinosSemana === 1 ? ' treino' : ' treinos') + ' na semana'; },
     aba:function(s){ return s.emAndamento ? 'sessao' : null; } },
-  { id:'saldo', nome:'Saldo', cor:'var(--tile-blue)', icone:I_WALLET, url:'apps/saldo/index.html',
+  { id:'saldo', nome:'Saldo', icone:I_WALLET, url:'apps/saldo/index.html',
     resumo:function(s){ return s.gastoHojeC ? 'Hoje: ' + money(s.gastoHojeC) : 'Nada gasto hoje'; } },
-  { id:'nutri', nome:'Nutri', cor:'var(--tile-yellow)', icone:I_DROP, url:'apps/nutri/index.html',
+  { id:'nutri', nome:'Nutri', icone:I_DROP, url:'apps/nutri/index.html',
     resumo:function(s){ return s.ml + '/' + s.meta + ' ml · ' + s.refeicoesHoje + ' ref.'; },
     aba:function(s){ return s.ml < s.meta ? 'agua' : 'dieta'; } }
 ];
@@ -97,29 +103,29 @@ function addAgua(){
   localStorage.setItem('maromba_agua', JSON.stringify(arr)); render();
   toast('+250 ml', function(){ localStorage.setItem('maromba_agua', JSON.stringify(J('maromba_agua', []).filter(function(r){ return r.id !== id; }))); render(); });
 }
-function barras(t){ try{ var SB = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SystemBars; if(SB && SB.setStyle){ var r = SB.setStyle({ style: t === 'dark' ? 'DARK' : 'LIGHT' }); if(r && r.catch) r.catch(function(){}); } }catch(e){} }
-function prog(b, s){ var p = b[4](s); return b[3](s) ? '✓ conquistada' : Math.min(p[0], p[1]) + '/' + p[1]; }
+/* tema escuro: ícones da barra de status CLAROS (estilo 'DARK' do SystemBars) */
+function barras(){ try{ var SB = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SystemBars; if(SB && SB.setStyle){ var r = SB.setStyle({ style:'DARK' }); if(r && r.catch) r.catch(function(){}); } }catch(e){} }
+
 function ajudaHTML(s){
-  var item = function(em, t, d, dir){ return '<div class="li"><span class="em">' + em + '</span><div class="tx"><b>' + t + '</b>' + (d ? '<span>' + d + '</span>' : '') + '</div>' + (dir || '') + '</div>'; };
+  var item = function(em, t, d, dir){ return '<div class="li">' + (em ? '<span class="em">' + em + '</span>' : '') + '<div class="tx"><b>' + t + '</b>' + (d ? '<span>' + d + '</span>' : '') + '</div>' + (dir || '') + '</div>'; };
+  var sec = function(titulo, corpo){ return '<section class="sec"><h3>' + titulo + '</h3><div class="sb">' + corpo + '</div></section>'; };
   var pct = Math.min(100, Math.round((s.xp - s.base) / (s.next - s.base) * 100));
-  var xp = [['💪','Treino concluído',XP.treino],['🏆','Recorde batido (extra)',XP.recorde],['💧','Meta de água batida',XP.meta],['🥤','Bebeu água, abaixo da meta',XP.agua],['🍽️','Refeição registrada no dia',XP.refeicao],['🧾','Gasto lançado no dia',XP.gasto]];
+  var xp = [['Treino concluído',XP.treino],['Recorde batido (extra)',XP.recorde],['Meta de água batida',XP.meta],['Bebeu água, abaixo da meta',XP.agua],['Refeição registrada no dia',XP.refeicao],['Gasto lançado no dia',XP.gasto]];
   var ini = Math.max(1, s.lvl - 1), niveis = '';
   for(var l = ini; l < ini + 5; l++){
-    niveis += '<div class="li' + (l === s.lvl ? ' cur' : '') + '"><span class="em">' + l + '</span><div class="tx"><b>' + TITULOS[Math.min(6, Math.floor((l - 1) / 2))] + '</b>' + (l === s.lvl ? '<span>Você está aqui</span>' : '') + '</div><span class="pill">' + (50 * (l - 1) * (l - 1)) + ' XP</span></div>';
+    niveis += '<div class="li' + (l === s.lvl ? ' cur' : '') + '"><span class="em">' + l + '</span><div class="tx"><b>' + titulo(l) + '</b>' + (l === s.lvl ? '<span>Você está aqui</span>' : '') + '</div><span class="pill">' + (50 * (l - 1) * (l - 1)) + ' XP</span></div>';
   }
-  return '<header class="ah"><button class="back" data-fechar>‹ Lobby</button><h2>Como funciona</h2></header><div class="ac">' +
-    '<section class="sec hero"><div class="hs3"><div class="st"><b>' + s.xp + '</b><span>XP</span></div><div class="st"><b>' + s.lvl + '</b><span>Nível</span></div><div class="st"><b>' + s.streak + '</b><span>' + (s.streak === 1 ? 'dia seguido' : 'dias seguidos') + '</span></div></div>' +
-    '<div class="mini big"><i style="width:' + pct + '%"></i></div><p class="nt">Faltam ' + (s.next - s.xp) + ' XP para o nível ' + (s.lvl + 1) + '. Melhor sequência: ' + s.best + '.</p></section>' +
-    '<section class="sec"><h3>Como ganhar XP</h3>' + xp.map(function(r){ return item(r[0], r[1], '', '<span class="pill">+' + r[2] + ' XP</span>'); }).join('') +
-    '<p class="nt">Refeição e gasto contam uma vez por dia. Receitas não contam.</p></section>' +
-    '<section class="sec"><h3>Níveis</h3>' + niveis + '<p class="nt">Cada nível pede mais XP que o anterior. O título muda a cada 2 níveis.</p></section>' +
-    '<section class="sec"><h3>Missões do dia</h3>' + item('💪','Treinar hoje','Conclua um treino hoje.') + item('💧','Meta de água','Chegue à meta do dia. O +250 registra direto.') + item('🧾','Lançar um gasto','Registre um gasto no Diário de hoje.') +
-    '<p class="nt">Reiniciam à meia-noite. O XP vem das próprias ações.</p></section>' +
-    '<section class="sec"><h3>Sequência</h3><p class="tp">Dias seguidos com qualquer atividade, até só beber água. Se hoje ainda está vazio, a conta parte de ontem. Ela quebra quando passa um dia inteiro sem registro.</p></section>' +
-    '<section class="sec"><h3>Conquistas</h3>' + BADGES.map(function(b){
-      var p = b[4](s), ok = b[3](s), w = Math.round(Math.min(p[0], p[1]) / p[1] * 100);
-      return '<div class="li"><span class="em">' + b[0] + '</span><div class="tx"><b>' + b[1] + '</b><span>' + b[2] + '</span><div class="mini"><i style="width:' + w + '%"></i></div></div><span class="pill' + (ok ? ' ok' : '') + '">' + (ok ? '✓' : Math.min(p[0], p[1]) + '/' + p[1]) + '</span></div>';
-    }).join('') + '</section>' +
+  return '<header class="ah"><div><button class="back" data-fechar>‹ Lobby</button><h2>Como funciona</h2></div></header><div class="ac">' +
+    '<section class="sec"><div class="sb"><div class="hs3"><div class="st"><b>' + s.xp + '</b><span>XP</span></div><div class="st"><b>' + s.lvl + '</b><span>Nível</span></div><div class="st"><b>' + s.streak + '</b><span>' + (s.streak === 1 ? 'dia seguido' : 'dias seguidos') + '</span></div></div>' +
+    '<div class="mini big"><i style="width:' + pct + '%"></i></div><p class="nt">Faltam ' + (s.next - s.xp) + ' XP para o nível ' + (s.lvl + 1) + '. Melhor sequência: ' + s.best + '.</p></div></section>' +
+    sec('Como ganhar XP', xp.map(function(r){ return item('', r[0], '', '<span class="pill">+' + r[1] + ' XP</span>'); }).join('') + '<p class="nt">Refeição e gasto contam uma vez por dia. Receitas não contam.</p>') +
+    sec('Níveis', niveis + '<p class="nt">Cada nível pede mais XP que o anterior. O título muda a cada 2 níveis.</p>') +
+    sec('Missões do dia', item('', 'Treinar hoje', 'Conclua um treino hoje.') + item('', 'Meta de água', 'Chegue à meta do dia. O +250 registra direto.') + item('', 'Lançar um gasto', 'Registre um gasto no Diário de hoje.') + '<p class="nt">Reiniciam à meia-noite. O XP vem das próprias ações.</p>') +
+    sec('Sequência', '<p class="tp">Dias seguidos com qualquer atividade, até só beber água. Se hoje ainda está vazio, a conta parte de ontem. Ela quebra quando passa um dia inteiro sem registro.</p>') +
+    sec('Conquistas', BADGES.map(function(b){
+      var p = b.p(s), ok = b.ok(s), w = Math.round(Math.min(p[0], p[1]) / p[1] * 100);
+      return '<div class="li"><div class="tx"><b>' + b.n + '</b><span>' + b.d + '</span><div class="mini"><i style="width:' + w + '%"></i></div></div><span class="pill' + (ok ? ' ok' : '') + '">' + (ok ? 'Concluída' : cnt(b, s)) + '</span></div>';
+    }).join('')) +
     '<p class="nt">O XP é calculado do que você registrou nos apps: apagar registros também reduz o XP.</p></div>';
 }
 function ajuda(on){
@@ -131,20 +137,19 @@ function ajuda(on){
 function sheet(modo){
   if(modo){
     var s = stats();
-    $('sheet-body').innerHTML = '<h2 class="hh">Conquistas</h2><div class="badges">' + BADGES.map(function(b){
-      var ok = b[3](s); return '<div class="bd' + (ok ? '' : ' lock') + '"><div class="e">' + b[0] + '</div><b>' + b[1] + '</b><span>' + b[2] + '</span><span>' + prog(b, s) + '</span></div>';
-    }).join('') + '</div>';
+    $('sheet-body').innerHTML = '<h2 class="hh">Conquistas</h2>' + BADGES.map(function(b){
+      var ok = b.ok(s);
+      return '<div class="bl' + (ok ? ' ok' : '') + '"><span class="mk"></span><div class="tx"><b>' + b.n + '</b><span>' + b.d + '</span></div><span class="pill' + (ok ? ' ok' : '') + '">' + (ok ? 'Concluída' : cnt(b, s)) + '</span></div>';
+    }).join('');
   }
   $('sheet').classList.toggle('on', !!modo);
 }
 
 /* ---------- tela ---------- */
 function render(){
-  var s = stats(), h = new Date().getHours();
-  var sauda = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-  var data = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
-  var C = 2 * Math.PI * 34, pct = Math.min(1, (s.xp - s.base) / (s.next - s.base));
-  var feitas = BADGES.filter(function(b){ return b[3](s); }).length;
+  var s = stats();
+  var pct = Math.min(1, (s.xp - s.base) / (s.next - s.base));
+  var feitas = BADGES.filter(function(b){ return b.ok(s); }).length;
   var L = ['S','T','Q','Q','S','S','D'];
   var tarefas = [
     { ok:s.treinou, t:'Treinar hoje', d:s.treinou ? 'Treino concluído' : (s.emAndamento ? 'Você tem um treino em andamento' : 'Abra o Maromba e comece'), xp:XP.treino,
@@ -154,21 +159,29 @@ function render(){
     { ok:s.gastou, t:'Lançar um gasto', d:s.gastou ? 'Dia registrado' : 'Mantenha o diário em dia', xp:XP.gasto,
       btn: s.gastou ? '' : '<button class="act" data-go="saldo">Abrir</button>' }
   ];
-  var todas = tarefas.every(function(q){ return q.ok; });
+  var nFeitas = tarefas.filter(function(q){ return q.ok; }).length, todas = nFeitas === tarefas.length;
+  /* conquista mais próxima de sair: a pendente com maior andamento */
+  var pend = BADGES.filter(function(b){ return !b.ok(s); }).map(function(b){ var p = b.p(s); return { b:b, p:p, r:Math.min(p[0], p[1]) / p[1] }; })
+    .sort(function(x, y){ return y.r - x.r; })[0];
+  var conquista = pend
+    ? '<button class="ach" data-badges><span class="tx"><b>' + pend.b.n + '<span>' + Math.min(pend.p[0], pend.p[1]) + '/' + pend.p[1] + '</span></b><small>' + pend.b.d + '</small><span class="mini"><i style="width:' + Math.round(pend.r * 100) + '%"></i></span></span><span class="go">' + I_CHEV + '</span></button>'
+    : '<button class="ach" data-badges><span class="tx"><b>Tudo conquistado</b><small>Ver conquistas</small></span><span class="go">' + I_CHEV + '</span></button>';
   $('hub').innerHTML =
-    '<div class="top"><div><h1>' + sauda + '</h1><small>' + data + '</small></div><button class="ibtn" data-info aria-label="Como funciona"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg></span></button></div>' +
-    '<section class="card"><div class="player"><div class="ring"><svg viewBox="0 0 84 84"><circle class="bg" cx="42" cy="42" r="34"/><circle class="fg" cx="42" cy="42" r="34" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" data-off="' + (C * (1 - pct)) + '"/></svg><b>' + s.lvl + '</b></div>' +
-    '<div><div class="p-title">' + TITULOS[Math.min(6, Math.floor((s.lvl - 1) / 2))] + '</div><div class="p-sub">' + (s.xp - s.base) + ' / ' + (s.next - s.base) + ' XP para o nível ' + (s.lvl + 1) + '</div><div class="bar"><i style="width:' + Math.round(pct * 100) + '%"></i></div></div></div>' +
-    '<div class="week">' + s.semana.map(function(d, i){ return '<div class="day"><div class="dot' + (d.on ? ' on' : '') + (d.k === s.today ? ' today' : '') + '">' + (d.on ? CHECK : '') + '</div>' + L[i] + '</div>'; }).join('') + '</div>' +
-    '<div class="p-sub" style="margin:12px 0 0;text-align:center"><span class="streak">🔥 ' + s.streak + (s.streak === 1 ? ' dia' : ' dias') + '</span> seguidos</div></section>' +
-    '<section class="card"><h2>Missões de hoje</h2>' + tarefas.map(function(q){
-      return '<div class="q' + (q.ok ? ' done' : '') + '"><div class="chk">' + (q.ok ? CHECK : '') + '</div><div class="t"><b>' + q.t + '</b><span>' + q.d + '</span></div>' + (q.btn || '<span class="xp">+' + q.xp + ' XP</span>') + '</div>';
-    }).join('') + (todas ? '<div class="all">Dia completo ✨</div>' : '') + '</section>' +
-    '<section><div class="apps">' + APPS.map(function(a){ return '<button class="app" style="background:' + a.cor + '" data-go="' + a.id + '" data-aba="' + (a.aba && a.aba(s) || '') + '"><span class="ico">' + a.icone + '</span><span><b>' + a.nome + '</b></span></button>'; }).join('') + '</div></section>' +
-    '<section class="card"><h2>Conquistas <button class="link" data-badges>' + feitas + '/' + BADGES.length + ' · ver</button></h2></section>';
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ var f = document.querySelector('.ring .fg'); if(f) f.setAttribute('stroke-dashoffset', f.getAttribute('data-off')); }); });
+    '<div class="hud-wrap"><div class="hud">' +
+      '<div class="hud-main"><div class="hud-kicker">Nível ' + s.lvl + '</div><div class="hud-title">' + titulo(s.lvl) + '</div><div class="xpbar"><i data-w="' + Math.round(pct * 100) + '"></i></div><div class="hud-sub">' + (s.xp - s.base) + ' / ' + (s.next - s.base) + ' XP</div></div>' +
+      '<div class="hud-right"><span class="chip" aria-label="' + s.streak + (s.streak === 1 ? ' dia seguido' : ' dias seguidos') + '">' + I_FLAME + s.streak + '</span><button class="ibtn" data-info aria-label="Como funciona"><span class="ico">' + I_HELP + '</span></button></div></div></div>' +
+    '<section class="sect"><h2>Missões de hoje<span class="tag' + (todas ? ' hot' : '') + '">' + nFeitas + '/' + tarefas.length + '</span></h2>' + tarefas.map(function(q){
+      return '<div class="q' + (q.ok ? ' done' : '') + '"><div class="chk">' + (q.ok ? CHECK : '') + '</div><div class="t"><b><em>' + q.t + '</em><i class="xp">+' + q.xp + ' XP</i></b><span>' + q.d + '</span></div>' + (q.btn || '') + '</div>';
+    }).join('') + (todas ? '<div class="all">Dia completo</div>' : '') + '</section>' +
+    '<section class="sect"><h2>Apps</h2>' + APPS.map(function(a){
+      return '<button class="dept" data-go="' + a.id + '" data-aba="' + (a.aba && a.aba(s) || '') + '"><span class="ico">' + a.icone + '</span><span class="tx"><b>' + a.nome + '</b><span>' + a.resumo(s) + '</span></span><span class="go">' + I_CHEV + '</span></button>';
+    }).join('') + '</section>' +
+    '<section class="sect"><h2>Semana<span class="tag' + (s.streak > 0 ? ' hot' : '') + '">' + s.streak + (s.streak === 1 ? ' dia seguido' : ' dias seguidos') + '</span></h2><div class="week">' +
+      s.semana.map(function(d, i){ return '<div class="day"><div class="dot' + (d.on ? ' on' : '') + (d.k === s.today ? ' today' : '') + '">' + (d.on ? CHECK : '') + '</div>' + L[i] + '</div>'; }).join('') + '</div></section>' +
+    '<section class="sect"><h2>Conquistas<span class="tag">' + feitas + '/' + BADGES.length + '</span></h2>' + conquista + '</section>';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ var f = document.querySelector('.xpbar i'); if(f) f.style.width = f.getAttribute('data-w') + '%'; }); });
   var visto = parseInt(localStorage.getItem('lobby_nivel_visto'), 10);
-  if(visto && s.lvl > visto) toast('Nível ' + s.lvl + '! Continue assim 🎉');
+  if(visto && s.lvl > visto) toast('Nível ' + s.lvl + ' alcançado');
   try{ localStorage.setItem('lobby_nivel_visto', s.lvl); }catch(e){}
 }
 
@@ -187,6 +200,6 @@ try{
   var A = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App;
   if(A && A.addListener) A.addListener('backButton', function(){ if($('ajuda').classList.contains('on')) ajuda(false); else if($('sheet').classList.contains('on')) sheet(false); else if(A.exitApp) A.exitApp(); });
 }catch(e){}
-barras(document.documentElement.getAttribute('data-theme'));
+barras();
 render();
 })();

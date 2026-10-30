@@ -1,25 +1,38 @@
-/* Ponte entre os apps e a Lobby: tema único (claro), "mundo" de cada app e o PORTAL (transição hub <-> app).
+/* Ponte entre os apps e a Lobby: tema único (escuro), "mundo" de cada app e o PORTAL (transição hub <-> app).
    Carregado no hub (index.html) e em todos os apps. */
 (function(){
   var R = document.documentElement;
-  function force(){ if(R.getAttribute('data-theme') !== 'light') R.setAttribute('data-theme','light'); }
-  try{ ['maromba_tema','saldo_theme','lobby_tema'].forEach(function(k){ localStorage.setItem(k,'light'); }); }catch(e){}
+  function force(){ if(R.getAttribute('data-theme') !== 'dark') R.setAttribute('data-theme','dark'); }
+  try{ ['maromba_tema','saldo_theme','lobby_tema'].forEach(function(k){ localStorage.setItem(k,'dark'); }); }catch(e){}
   force();
   new MutationObserver(force).observe(R, { attributes:true, attributeFilter:['data-theme'] });
 
-  /* Pré-carrega as fontes do tema assim que a página começa, para o texto não "trocar de fonte" depois.
+  /* Barras do sistema (Android): tema escuro => ícones CLAROS (estilo 'DARK' do SystemBars).
+     Reaplicado algumas vezes porque o app.js de cada app ainda pode pedir 'LIGHT' ao iniciar. */
+  function barras(){
+    try{
+      var SB = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SystemBars;
+      if(SB && SB.setStyle){ var r = SB.setStyle({ style:'DARK' }); if(r && r.catch) r.catch(function(){}); }
+    }catch(e){}
+  }
+  barras();
+  document.addEventListener('DOMContentLoaded', barras);
+  window.addEventListener('load', function(){ barras(); setTimeout(barras, 600); });
+  window.addEventListener('pageshow', barras);
+
+  /* Pré-carrega a fonte do tema assim que a página começa, para o texto não "trocar de fonte" depois.
      O caminho sai do próprio src deste script (.../shared/bridge.js -> .../fonts/). */
   try{
     var me = document.currentScript, base = me && me.src ? me.src.replace(/shared\/bridge\.js.*$/, 'fonts/') : '';
-    if(base) ['Fredoka.ttf','PlusJakartaSans.ttf'].forEach(function(f){
+    if(base){
       var l = document.createElement('link');
-      l.rel = 'preload'; l.as = 'font'; l.type = 'font/ttf'; l.crossOrigin = 'anonymous'; l.href = base + f;
+      l.rel = 'preload'; l.as = 'font'; l.type = 'font/ttf'; l.crossOrigin = 'anonymous'; l.href = base + 'PlusJakartaSans.ttf';
       document.head.appendChild(l);
-    });
+    }
   }catch(e){}
 
-  /* Mundo do app: o theme.css usa [data-world] para escolher o cenário do topo.
-     Definido já no <html> (antes de o body existir) para o cenário não "piscar". Vazio no hub. */
+  /* Mundo do app: o theme.css usa [data-world] para o nome e a cor da barra de topo.
+     Definido já no <html> (antes de o body existir) para a barra não "piscar". Vazio no hub. */
   var p = location.pathname;
   var mundo = p.indexOf('/maromba/') > -1 ? 'maromba' : p.indexOf('/saldo/') > -1 ? 'saldo' : p.indexOf('/nutri/') > -1 ? 'nutri' : '';
   if(mundo) R.setAttribute('data-world', mundo);
@@ -40,7 +53,7 @@
       if(aberto) return; aberto = true;
       setTimeout(function(){
         R.classList.add('portal-go');
-        setTimeout(function(){ R.removeAttribute('data-portal'); R.classList.remove('portal-go'); }, 560);
+        setTimeout(function(){ R.removeAttribute('data-portal'); R.classList.remove('portal-go'); }, 520);
       }, Math.max(0, 200 - (Date.now() - t0)));
     };
     var pronto = function(){
@@ -62,7 +75,7 @@
     d.style.setProperty('--px', x + 'px'); d.style.setProperty('--py', y + 'px');
     (document.body || R).appendChild(d);
     guardar(mundoAlvo);
-    setTimeout(go, 380);
+    setTimeout(go, 360);
   } };
 
   /* Nos apps: ao sair por QUALQUER caminho (botão ‹ Lobby ou voltar do Android), deixa o recado

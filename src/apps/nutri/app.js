@@ -720,7 +720,7 @@ function renderDieta() {
 
         <p class="card-metas-sub">
           ${meta.kcal > 0
-            ? (totais.kcal >= meta.kcal ? 'Meta de calorias atingida! 🎉' : `Faltam ${Math.round(meta.kcal - totais.kcal)} kcal para a meta de ${Math.round(meta.kcal)} kcal`)
+            ? (totais.kcal >= meta.kcal ? 'Meta de calorias atingida' : `Faltam ${Math.round(meta.kcal - totais.kcal)} kcal para a meta de ${Math.round(meta.kcal)} kcal`)
             : 'Nenhuma meta definida.'}
         </p>
 
@@ -959,7 +959,7 @@ function alimentoItemHTML(f, favSet) {
       </button>
       <button type="button" class="btn-icon" data-fav-food="${f.id}" aria-pressed="${fav}"
         aria-label="${fav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}"
-        title="${fav ? 'Remover dos favoritos' : 'Favoritar'}">${fav ? '★' : '☆'}</button>
+        title="${fav ? 'Remover dos favoritos' : 'Favoritar'}"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.9L12 3.5z"/></svg></button>
     </div>`;
 }
 
@@ -972,7 +972,7 @@ function renderListaAlimentos() {
   const favIds = getFavFoods();
   const favSet = new Set(favIds);
   const todos = allFoods().slice().sort((a, b) => COLLATOR_PT.compare(a.nome, b.nome));
-  const secao = titulo => `<p class="hint" style="margin:8px 0 2px">${titulo}</p>`;
+  const secao = titulo => `<p class="hint" style="margin:10px 0 2px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:11px">${titulo}</p>`;
   let html = '';
 
   if (termo) {
@@ -988,8 +988,8 @@ function renderListaAlimentos() {
   } else {
     const favoritos = favIds.map(id => foodById(id)).filter(Boolean);
     const recentes = alimentosRecentesIds().filter(id => !favSet.has(id)).map(id => foodById(id)).filter(Boolean);
-    if (favoritos.length) html += secao('⭐ Favoritos') + favoritos.map(f => alimentoItemHTML(f, favSet)).join('');
-    if (recentes.length) html += secao('🕘 Usados recentemente') + recentes.map(f => alimentoItemHTML(f, favSet)).join('');
+    if (favoritos.length) html += secao('Favoritos') + favoritos.map(f => alimentoItemHTML(f, favSet)).join('');
+    if (recentes.length) html += secao('Usados recentemente') + recentes.map(f => alimentoItemHTML(f, favSet)).join('');
     if (favoritos.length || recentes.length) html += secao('Todos os alimentos');
     html += todos.slice(0, MAX_ALIMENTOS_LISTA).map(f => alimentoItemHTML(f, favSet)).join('');
     if (todos.length > MAX_ALIMENTOS_LISTA) {
@@ -1341,7 +1341,7 @@ function renderAgua() {
         </div>
         <p class="card-metas-sub">
           ${temMeta
-            ? (total >= config.metaMl ? 'Meta de água atingida! 🎉' : `Faltam ${restante} ml para a meta de ${config.metaMl} ml`)
+            ? (total >= config.metaMl ? 'Meta de água atingida' : `Faltam ${restante} ml para a meta de ${config.metaMl} ml`)
             : 'Nenhuma meta definida.'}
         </p>
         ${barraProgressoHTML(total, config.metaMl, { fina: true, aria: 'Progresso da meta de água' })}
@@ -1569,7 +1569,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
-  sincronizarBarrasSistema('light');
+  sincronizarBarrasSistema('dark');
 
   document.getElementById('btn-config').addEventListener('click', openConfig);
   document.getElementById('btn-close-config').addEventListener('click', closeConfig);

@@ -18,22 +18,26 @@ Cada app é uma **página separada**, e a navegação é por `location.href` (n�
 src/index.html + hub.js     hub, abre os apps
 src/apps/<id>/index.html    cada app, com seu CSS/JS
 src/shared/theme.css        tema único, carregado POR ÚLTIMO em cada página
-src/shared/bridge.js        força o tema claro e injeta o botão "‹ Lobby"
+src/shared/bridge.js        força o tema escuro, ajusta a barra de status e injeta o botão "‹ Lobby"
 ```
 
 - Voltar: o botão voltar do Android, na tela inicial de cada app, faz `window.location.href = '../../index.html'` (antes chamava `exitApp`). No hub, o voltar fecha o app.
 - Como o hub é uma página à parte, ele recalcula tudo em `pageshow` e `visibilitychange`.
 - Deep link: o hub grava `sessionStorage['maromba_aba_atual']` (abas: `sessao`, `meus-treinos`, `exercicios`, `historico`) ou `sessionStorage['nutri_aba_atual']` (`dieta`, `agua`) antes de navegar.
-- Portal: a transição hub ⇄ app (círculo da cor do app + ícone) vive em `shared/bridge.js` e na seção 10 do `theme.css`. Cada app novo precisa de cor e ícone ali (`--portal-<id>`, `--emb-<id>`).
+- Portal: a transição hub ⇄ app (círculo da cor do app + ícone) vive em `shared/bridge.js` e na seção 9 do `theme.css`. Cada app novo precisa de cor e ícone ali (`--portal-<id>`, `--emb-<id>`); a cor é um tom escuro e o ícone um traço claro.
 - `copiar-www.js` copia `src/` para `www/`. `npm run sync` = `node copiar-www.js && npx cap sync`.
 
 ## Tema e visual
 
-- **Um único tema, claro.** Paleta "Earthy Forest Hues": `#DAD8CC`, `#A6B38D`, `#58825C`, `#3C5C40`, `#335042`.
-- Todos os tokens (`--bg`, `--surface`, `--chalk`, ...) ficam em `src/shared/theme.css`. Ele redefine os tokens dos dois apps (que já usavam os mesmos nomes) para `:root`, `[data-theme="light"]` e `[data-theme="dark"]` com os mesmos valores. O nome `--chalk` é herdado: hoje é a cor de destaque (verde).
-- `bridge.js` grava `light` em `maromba_tema`, `saldo_theme` e `lobby_tema` e reforça o atributo `data-theme="light"` com um `MutationObserver`. Os botões de alternar tema são escondidos por CSS.
-- Em telas até 900px, o header fixo foi removido: `.sidebar-brand` some, `.sidebar-footer` (engrenagem de Ajustes) vira `position: absolute` e rola com a página, e o `.main` tem 60px de padding no topo. O botão **‹ Lobby** ocupa esse espaço.
-- Elementos com cor fixa no CSS original dos apps podem destoar da paleta. Corrija no `theme.css` ou direto no CSS do app.
+- **Um único tema, escuro e sóbrio (v4).** Fundo quase-preto esverdeado (`--bg #0E1311`), um destaque sálvia (`--chalk #6F9A7B`) e âmbar apagado só como tom de recompensa. O nome `--chalk` é herdado: hoje é a cor de destaque.
+- Todos os tokens (`--bg`, `--surface`, `--chalk`, ...) ficam em `src/shared/theme.css`. Ele redefine os tokens dos apps (que já usavam os mesmos nomes) para `:root`, `[data-theme="light"]` e `[data-theme="dark"]` com os mesmos valores.
+- `bridge.js` grava `dark` em `maromba_tema`, `saldo_theme` e `lobby_tema` e reforça `data-theme="dark"` com um `MutationObserver`. Os botões de alternar tema são escondidos por CSS.
+- **Sem cartões.** Blocos viram linhas separadas por um fio de 1px; seções têm título em caixa-alta com fio embaixo. Só o que precisa parecer tocável mantém contorno (`.selectable-card`, campos, botões, abas). Sem sombras "degrau", cantos pequenos (`--radius` 8, `--radius-lg` 10).
+- **Tipografia única:** Plus Jakarta Sans. A Fredoka (arredondada) foi removida; `src/fonts/Fredoka.ttf` pode ser apagado. Sem emojis no hub.
+- **Barra de status do Android:** como o tema é escuro, os ícones nativos precisam ser CLAROS (`SystemBars` estilo `DARK`). Isso é aplicado em `hub.js` e em `bridge.js` (várias vezes, porque o `app.js` de cada app ainda pode pedir `LIGHT` ao iniciar; troque lá também).
+- **Navegação inferior fixa** (telas até 900px): `.sidebar-nav.bottom-nav` fica `position: fixed`, colada na borda, largura total, com fio no topo e respeitando a área segura. O item ativo ganha um traço de 2px no topo.
+- Em telas até 900px: `.sidebar-brand` some; `.main::before` desenha uma barra de topo discreta (nome de `--world-title`, com um traço curto na cor `--world-c` do app); o `.sidebar-footer` (engrenagem) e o botão **‹ Lobby** ficam sobre essa barra, em `position: absolute`, e rolam com a página. Cor e nome de cada app: `:root[data-world=...]` no `theme.css`, seção 8.
+- Elementos com cor fixa no CSS original dos apps podem destoar do tema escuro (por exemplo, `#fff` ou cores claras escritas direto). Corrija no `theme.css` ou direto no CSS do app.
 
 ## Hub: gamificação
 
@@ -57,7 +61,7 @@ Tudo é **calculado a cada abertura** a partir dos dados dos apps (nada de XP sa
 | `maromba_dieta` | refeições (usada pelo **Nutri**): `{ id, data, horario, nome, ingredientes }` |
 | `maromba_sessao_ativa` | treino em andamento |
 | `saldo-dados` | estado do Saldo (ver abaixo) |
-| `maromba_tema`, `saldo_theme`, `lobby_tema` | sempre `light` |
+| `maromba_tema`, `saldo_theme`, `lobby_tema` | sempre `dark` |
 | `lobby_nivel_visto` | último nível mostrado no hub |
 
 Datas são `YYYY-MM-DD` na hora **local**. Valores em dinheiro do Saldo são **centavos**.
@@ -109,11 +113,11 @@ Os dois apps agendam lembretes no mesmo pacote, então os ids **não podem colid
 
 ## Como mexer
 
-**App novo**: pasta em `src/apps/<id>/`; incluir `theme.css` e `bridge.js` no `<head>`; prefixar as chaves do `localStorage`; fazer o voltar do Android ir para `../../index.html`; registrar em `APPS` no `hub.js` (`id`, `nome`, `cor`, `icone`, `url`, `resumo`); reservar uma faixa de ids de notificação.
+**App novo**: pasta em `src/apps/<id>/`; incluir `theme.css` e `bridge.js` no `<head>`; prefixar as chaves do `localStorage`; fazer o voltar do Android ir para `../../index.html`; registrar em `APPS` no `hub.js` (`id`, `nome`, `icone`, `url`, `resumo`); reservar uma faixa de ids de notificação.
 
-**Mudar cores**: só em `src/shared/theme.css`.
+**Mudar cores**: só em `src/shared/theme.css`. Para um app novo, defina também `--world-c` e `--world-title` na seção 8 (a barra de topo usa os dois).
 
-**Mudar regras de XP, missões ou conquistas**: `stats()`, `BADGES` e `render()` em `src/hub.js`.
+**Mudar regras de XP, missões ou conquistas**: `stats()`, `BADGES` (objetos `{ n, d, ok, p }`) e `render()` em `src/hub.js`.
 
 ## Pendências e ideias
 
