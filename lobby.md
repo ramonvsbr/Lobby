@@ -43,7 +43,7 @@ src/shared/bridge.js        força o tema escuro, ajusta a barra de status e inj
 
 Tudo é **calculado a cada abertura** a partir dos dados dos apps (nada de XP salvo), então não dessincroniza.
 
-- **XP por dia**: treino +50 cada (+15 se bateu recorde); meta de água +20 (ou +5 se bebeu algo abaixo da meta); refeição registrada +10; gasto no Diário +10 (cada um conta uma vez por dia).
+- **XP por dia**: treino +50 cada (+15 se bateu recorde); meta de água +20 (ou +5 se bebeu algo abaixo da meta); refeição registrada +10; gasto lançado no Saldo +10 (conta uma vez por dia; cada item novo do Mensal guarda `criado` com a data, e lançamentos antigos do Diário continuam valendo).
 - **Nível**: `floor(sqrt(xp / 50)) + 1`. O nível L começa em `50 * (L-1)²` XP.
 - **Título**: muda a cada 2 níveis (Iniciante, Aprendiz, Constante, Focado, Disciplinado, Imparável, Lenda).
 - **Sequência**: dias seguidos com qualquer atividade. Se hoje ainda não tem atividade, a contagem parte de ontem.
@@ -68,9 +68,9 @@ Datas são `YYYY-MM-DD` na hora **local**. Valores em dinheiro do Saldo são **c
 
 ## Saldo: regra do saldo atual
 
-- Lançamento do Diário: `{ id, day, item, amount, monthKey, type? }` (`type: 'income'` para receita). O Mensal guarda receitas e despesas (avulsas, recorrentes e parceladas) em `state.income` e `state.expenses`.
-- **Saldo atual** = saldo inicial do mês + tudo que já aconteceu **até hoje**: receitas e despesas do Mensal com dia ≤ hoje, mais o Diário com dia ≤ hoje. Mês encerrado conta tudo (igual ao projetado); mês futuro não conta nada. Item sem dia só conta no último dia do mês.
-- **Projetado** = saldo inicial + Mensal inteiro + Diário do mês. O saldo inicial do mês seguinte é o projetado do anterior.
+- O **Diário foi removido da interface** (o Saldo tem só **Mensal**, padrão, e **Anual**). Os lançamentos antigos ficam em `state.daily.entries` (`{ id, day, item, amount, monthKey, type? }`) e **continuam contando** no cofre; não dá mais para criar nem editar. O Mensal guarda receitas e despesas (avulsas, recorrentes e parceladas) em `state.income` e `state.expenses`; itens criados pelo botão + trazem `criado: 'YYYY-MM-DD'`.
+- **Saldo atual** = saldo inicial do mês + tudo que já aconteceu **até hoje**: receitas e despesas do Mensal com dia ≤ hoje, mais os lançamentos antigos do Diário com dia ≤ hoje. Mês encerrado conta tudo (igual ao projetado); mês futuro não conta nada. Item sem dia só conta no último dia do mês.
+- **Projetado** = saldo inicial + Mensal inteiro + lançamentos antigos do Diário do mês. O saldo inicial do mês seguinte é o projetado do anterior.
 - Editar o saldo atual grava `initial = valorDigitado − saldoCaido(mês)` e marca o mês como `manual`.
 - O botão **i** no cartão abre "Como é calculado", e em mês manual (que não seja o primeiro) oferece **Voltar ao automático**.
 - Funções-chave em `apps/saldo/app.js`: `mensalCutoffDay`, `mensalSaldoFor`, `mensalCaido`, `dailyNetCaido`, `saldoCaido`, `recomputeDailyBalances`.
@@ -110,6 +110,7 @@ Os dois apps agendam lembretes no mesmo pacote, então os ids **não podem colid
 - `android-actions/setup-android` falhou ao instalar o pacote `tools`; foi trocado por aceitar as licenças com `sdkmanager --licenses`.
 - No `build.gradle`, `versionCode`/`versionName` precisam de `=`. Sem ele, o Gradle interpreta como chamada de função e falha com "Value is null".
 - Troca de chave de assinatura = o APK novo não instala por cima do antigo.
+- **Barra inferior sem toque (corrigido):** `.sidebar-nav.bottom-nav` é `position:fixed`, mas o `.main` (`position:relative`, depois dela no DOM) ficava por cima e engolia os toques. A barra precisa de `z-index` (hoje 50, no `theme.css`, seção 8). Toasts e janelas usam 200+.
 
 ## Como mexer
 
@@ -119,11 +120,14 @@ Os dois apps agendam lembretes no mesmo pacote, então os ids **não podem colid
 
 **Mudar regras de XP, missões ou conquistas**: `stats()`, `BADGES` (objetos `{ n, d, ok, p }`) e `render()` em `src/hub.js`.
 
+## Ícone
+
+Monograma **L** em sálvia (gradiente `#A9CDB2` → `#6F9A7B`) com um ponto âmbar (`#D2B466`, a cor de recompensa) sobre fundo `#0E1311`. Arquivos gerados: `android/app/src/main/res/mipmap-*/ic_launcher*.png` (legado, redondo, camada de frente e de fundo do ícone adaptativo) e `icons/icon-*.webp`. Se for recriar com `capacitor-assets` (`assets/icon-only.png`), troque o `--iconBackgroundColor` do workflow, que ainda está em `#ECEBE3` (bege), para `#0E1311`.
+
 ## Pendências e ideias
 
 - Testar no aparelho: lembretes com o app fechado, comportamento após reiniciar o celular e o saldo atual com dados reais.
 - Marcar cada item do Mensal como "pago/recebido" em vez de depender do dia.
 - Redesenho das telas internas dos apps (hoje só o tema e o acabamento são compartilhados).
-- Ícone próprio do Lobby (hoje ainda é o do Maromba, a menos que exista `assets/icon-only.png`).
 - Definir `smallIcon` das notificações em `capacitor.config.json`.
 - Escolher um `appId`/nome definitivo, se for publicar fora do uso pessoal.

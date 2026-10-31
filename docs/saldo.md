@@ -284,3 +284,10 @@ Se o sync der erro de "no such file", falta algum arquivo na lista do `copiar-ww
 - `copiar-www.js`, `capacitor.config.json`, `package.json`
 - `README.md`
 - `saldo.md` (este arquivo; antes `ss.md`)
+
+### Remoção da tela Diário (31/10/2026)
+- A barra inferior agora tem só **Mensal** (padrão, abre primeiro) e **Anual**. A tela Diário, o seletor de dia e a aba de lançamentos do dia saíram. Os itens anteriores deste documento que falam do Diário descrevem o histórico, não o comportamento atual.
+- O cartão **Cofre agora** (editável, com o botão **i** e o "Voltar ao automático") e a **Previsão** foram para o topo do Mensal, junto com o aviso de backup. As boas-vindas continuam pedindo o cofre.
+- O botão **+** só cria itens do Mensal (aba Gastos ou Ganhos aberta) e grava `criado` (data) no item.
+- Lançamentos antigos do Diário **não foram apagados**: seguem em `state.daily.entries` e continuam somando no cofre e na previsão. A conta do botão **i** mostra uma linha "Lançamentos antigos do Diário" quando existirem. O botão voltar do Android leva ao Mensal e, no Mensal, ao hub.
+- Exemplo ("Carregar exemplo") não cria mais lançamentos do Diário.

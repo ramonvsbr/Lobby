@@ -90,7 +90,7 @@ Dieta e água.
 
 Controle financeiro simples.
 
-- **Diário** (gastos e receitas do dia a dia) e **Mensal** (receitas e despesas avulsas, recorrentes e parceladas).
+- **Mensal** (receitas e despesas avulsas, recorrentes e parceladas, com cofre e previsão do mês) e **Anual** (resumo por ano). A tela Diário foi removida.
 - **Saldo atual:** saldo inicial + tudo o que já aconteceu até hoje.
 - **Projetado:** como o mês termina, com todo o Mensal.
 - Botão **i** no cartão de saldo mostra a conta, e é possível voltar o saldo ao cálculo automático.

@@ -20,6 +20,15 @@ function stats(){
   agua.forEach(function(r){ if(r.data) D(r.data).ml += r.ml || 0; });
   dieta.forEach(function(r){ if(r.data) D(r.data).diet++; });
   var gastoHojeC = 0, gastoMesC = 0, mk = today.slice(0,7), nGastos = 0;
+  /* gastos lançados no Mensal (cada item novo guarda a data de criação em `criado`) */
+  (s.expenses || []).forEach(function(r){
+    if(!r.criado) return;
+    var v = (r.values && (r.values[r.criado.slice(0,7)] || r.values[r.instStart])) || 0;
+    nGastos++;
+    D(r.criado).gasto++;
+    if(r.criado.slice(0,7) === mk){ gastoMesC += v; if(r.criado === today) gastoHojeC += v; }
+  });
+  /* lançamentos antigos do Diário (a tela foi removida, mas o histórico continua valendo) */
   ent.forEach(function(e){
     if(e.type === 'income' || !(e.amount > 0) || !e.monthKey) return;
     nGastos++;
@@ -120,7 +129,7 @@ function ajudaHTML(s){
     '<div class="mini big"><i style="width:' + pct + '%"></i></div><p class="nt">Faltam ' + (s.next - s.xp) + ' XP para o nível ' + (s.lvl + 1) + '. Melhor sequência: ' + s.best + '.</p></div></section>' +
     sec('Como ganhar XP', xp.map(function(r){ return item('', r[0], '', '<span class="pill">+' + r[1] + ' XP</span>'); }).join('') + '<p class="nt">Refeição e gasto contam uma vez por dia. Receitas não contam.</p>') +
     sec('Níveis', niveis + '<p class="nt">Cada nível pede mais XP que o anterior. O título muda a cada 2 níveis.</p>') +
-    sec('Missões do dia', item('', 'Treinar hoje', 'Conclua um treino hoje.') + item('', 'Meta de água', 'Chegue à meta do dia. O +250 registra direto.') + item('', 'Lançar um gasto', 'Registre um gasto no Diário de hoje.') + '<p class="nt">Reiniciam à meia-noite. O XP vem das próprias ações.</p>') +
+    sec('Missões do dia', item('', 'Treinar hoje', 'Conclua um treino hoje.') + item('', 'Meta de água', 'Chegue à meta do dia. O +250 registra direto.') + item('', 'Lançar um gasto', 'Lance um gasto no Saldo hoje.') + '<p class="nt">Reiniciam à meia-noite. O XP vem das próprias ações.</p>') +
     sec('Sequência', '<p class="tp">Dias seguidos com qualquer atividade, até só beber água. Se hoje ainda está vazio, a conta parte de ontem. Ela quebra quando passa um dia inteiro sem registro.</p>') +
     sec('Conquistas', BADGES.map(function(b){
       var p = b.p(s), ok = b.ok(s), w = Math.round(Math.min(p[0], p[1]) / p[1] * 100);
@@ -156,7 +165,7 @@ function render(){
       btn: s.treinou ? '' : '<button class="act" data-go="maromba" data-aba="' + (s.emAndamento ? 'sessao' : 'meus-treinos') + '">' + (s.emAndamento ? 'Continuar' : 'Treinar') + '</button>' },
     { ok:s.ml >= s.meta, t:'Meta de água', d:s.ml + ' de ' + s.meta + ' ml', xp:XP.meta,
       btn: s.ml >= s.meta ? '' : '<button class="act" data-agua>+250</button>' },
-    { ok:s.gastou, t:'Lançar um gasto', d:s.gastou ? 'Dia registrado' : 'Mantenha o diário em dia', xp:XP.gasto,
+    { ok:s.gastou, t:'Lançar um gasto', d:s.gastou ? 'Dia registrado' : 'Registre no Saldo', xp:XP.gasto,
       btn: s.gastou ? '' : '<button class="act" data-go="saldo">Abrir</button>' }
   ];
   var nFeitas = tarefas.filter(function(q){ return q.ok; }).length, todas = nFeitas === tarefas.length;

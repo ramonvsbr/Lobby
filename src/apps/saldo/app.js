@@ -168,23 +168,15 @@
       { id:"r2", day:15, item:"Serviços Extra / Freelance", values: series([450,800,300,1200,500,650,400]) },
       { id:"r3", day:25, item:"Rendimentos / Outros",       values: series([150,160,155,170,165,175,180]) }
     ];
-    var today = new Date().getDate();
-    var daily = {
-      nextId: 3,
-      balances: {},
-      entries: [
-        { id:"d1", day: today, item:"Padaria", amount: toCents(18.5), monthKey: currentKey },
-        { id:"d2", day: today, item:"Uber",    amount: toCents(22),   monthKey: currentKey }
-      ]
-    };
+    var daily = { nextId: 1, balances: {}, entries: [] };
     daily.balances[months[0]] = { initial: toCents(500) };
 
-    return { version: CURRENT_SCHEMA_VERSION, months: months, selectedMonth: currentKey, selectedDiarioMonth: currentKey, expenses: expenses, income: income, nextId: 100, daily: daily };
+    return { version: CURRENT_SCHEMA_VERSION, months: months, selectedMonth: currentKey, expenses: expenses, income: income, nextId: 100, daily: daily };
   }
 
   function emptyData(){
     var currentKey = getTodayMonthKey();
-    return { version: CURRENT_SCHEMA_VERSION, months: [currentKey], selectedMonth: currentKey, selectedDiarioMonth: currentKey, expenses: [], income: [], nextId: 1, daily: { nextId: 1, entries: [], balances: {} } };
+    return { version: CURRENT_SCHEMA_VERSION, months: [currentKey], selectedMonth: currentKey, expenses: [], income: [], nextId: 1, daily: { nextId: 1, entries: [], balances: {} } };
   }
 
   var state = null;
@@ -416,9 +408,6 @@
     if (!state.selectedMonth || state.months.indexOf(state.selectedMonth) === -1) {
       state.selectedMonth = todayKey;
     }
-    if (!state.selectedDiarioMonth || state.months.indexOf(state.selectedDiarioMonth) === -1) {
-      state.selectedDiarioMonth = todayKey;
-    }
     if (!state.daily) {
       state.daily = { nextId: 1, entries: [], balances: {} };
     }
@@ -427,11 +416,7 @@
     if (!state.daily.nextId) state.daily.nextId = 1;
   }
 
-  function getSelectedDiarioMonth(){
-    return state.selectedDiarioMonth || getTodayMonthKey();
-  }
-
-  /* ---------- Data selecionada no Diário (dia visualizado) ---------- */
+  /* ---------- Datas ---------- */
   function pad2(n){ return n < 10 ? '0' + n : '' + n; }
   function dateToISO(d){ return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
   function todayISO(){ return dateToISO(new Date()); }
@@ -439,24 +424,8 @@
     var p = iso.split('-');
     return dateToISO(new Date(parseInt(p[0],10), parseInt(p[1],10) - 1, parseInt(p[2],10) + days));
   }
-  var diarioData = todayISO();
-  function diarioDay(){ return parseInt(diarioData.slice(8, 10), 10) || 1; }
-
-  function setDiarioData(iso){
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) iso = todayISO();
-    var mk = iso.slice(0, 7);
-    if(!goToMonthKey(mk)){ renderDiario(); return; }
-    var dir = slideDirection(diarioData, iso);
-    var mudouMes = state.selectedDiarioMonth !== mk;
-    state.selectedDiarioMonth = mk;
-    diarioData = iso;
-    persist();
-    renderDiario();
-    // mesmo mês: só a lista do dia desliza; mês diferente: o painel inteiro
-    playSlide(mudouMes ? slideTargets('viewDiario') : [document.getElementById('diarioBook')], dir);
-  }
-
-  /* Lançamentos do Diário: despesa (padrão) ou receita (row.type === 'income') */
+  /* Lançamentos antigos do Diário (a tela foi removida; os dados continuam contando no cofre):
+     despesa (padrão) ou receita (row.type === 'income') */
   function isDailyIncome(row){ return row.type === 'income'; }
   function dailyMatches(row, kind){ return (kind === 'income') === isDailyIncome(row); }
 
@@ -618,7 +587,6 @@
 
   /* ---------- Render: Mensal ---------- */
   var mensalTipo = 'expenses'; // aba aberta no Mensal (só na memória)
-  var diarioTipo = 'expenses'; // aba aberta no Diário (só na memória)
 
   function render(){
     renderTabs();
@@ -760,6 +728,8 @@
 
     var elSub = document.getElementById('statSaldoSub');
     if(elSub) elSub.textContent = !isMonthTracked(mk) ? 'nada registrado' : (saldo >= 0 ? 'no azul' : 'no vermelho');
+
+    renderCofre();
   }
 
   function dayValue(row){
@@ -951,6 +921,7 @@
           row.day = v;
           persist();
           renderTable(kind);
+          renderPanel();   // o dia muda o que já caiu no cofre
         },
         onDelete: function(){
           var arr = kind === 'expenses' ? state.expenses : state.income;
@@ -1000,41 +971,23 @@
     });
   }
 
-  /* ---------- Render: Diário ---------- */
+  /* ---------- Cofre (saldo atual) e Previsão: topo do Mensal ---------- */
   var saldoAtualCents = 0;
 
-  function renderDiario(){
-    var mk = getSelectedDiarioMonth();
-    // a data visualizada sempre pertence ao mês selecionado nas abas
-    if(diarioData.slice(0, 7) !== mk) diarioData = (mk === getTodayMonthKey()) ? todayISO() : mk + '-01';
+  function renderCofre(){
+    var mk = state.selectedMonth;
     recomputeDailyBalances();
-
-    var dateInput = document.getElementById('diarioDataInput');
-    if(dateInput && document.activeElement !== dateInput) dateInput.value = diarioData;
-    var btnHoje = document.getElementById('btnDiarioDiaHoje');
-    if(btnHoje) btnHoje.classList.toggle('is-hoje', diarioData === todayISO());
-
-    renderDiarioTypeTabs();
-
-    var exp = sumDailyMonth(mk, 'expenses');
-    var inc = sumDailyMonth(mk, 'income');
     // mês anterior ao primeiro cadastrado: aparece vazio e sem saldo
     var tracked = isMonthTracked(mk);
     var initial = tracked ? state.daily.balances[mk].initial : 0;
     var cutoff = mensalCutoffDay(mk);
 
-    // saldo atual: tudo o que já aconteceu até hoje (Mensal + Diário)
+    // saldo atual: tudo o que já aconteceu até hoje
     var saldoAtual = tracked ? initial + saldoCaido(mk) : 0;
-    // projetado: fim do mês, com todo o Mensal e o Diário
-    var projetado = tracked ? initial + mensalSaldoFor(mk) - exp.total + inc.total : 0;
+    // previsão: fim do mês, com todo o Mensal
+    var projetado = tracked ? initial + mensalSaldoFor(mk) + dailyNetMonth(mk) : 0;
 
-    var elExp = document.getElementById('diarioDespesas');
-    if(elExp) elExp.textContent = fmtMoney(exp.total);
-
-    var elExpCount = document.getElementById('diarioDespesasCount');
-    if(elExpCount) elExpCount.textContent = exp.count + (exp.count===1?' item':' itens') + ' em ' + monthLabel(mk);
-
-    var saldoInput = document.getElementById('diarioSaldoAtualInput');
+    var saldoInput = document.getElementById('cofreSaldoInput');
     saldoAtualCents = saldoAtual;
     if(saldoInput && document.activeElement !== saldoInput){
       saldoInput.value = tracked ? fmtMoney(saldoAtual) : '—';
@@ -1044,12 +997,12 @@
       saldoInput.classList.toggle('neg', tracked && saldoAtual < 0);
     }
 
-    var elAtualSub = document.getElementById('diarioSaldoAtualSub');
+    var elAtualSub = document.getElementById('cofreSaldoSub');
     if(elAtualSub){
       if(!tracked) elAtualSub.textContent = 'sem saldo antes de ' + monthLabel(state.months.slice().sort()[0]);
       else if(cutoff === 0) elAtualSub.textContent = 'mês futuro: ainda não entra no cofre';
       else if(cutoff >= 99) elAtualSub.textContent = 'mês encerrado: tudo contado';
-      else elAtualSub.textContent = 'Mensal e Diário até o dia ' + cutoff;
+      else elAtualSub.textContent = 'Mensal até o dia ' + cutoff;
     }
 
     // primeiro passo pendente: destaca o cartão do saldo atual
@@ -1058,90 +1011,17 @@
     if(cardSaldo) cardSaldo.classList.toggle('needs-saldo', precisaSaldo);
     if(precisaSaldo && elAtualSub) elAtualSub.textContent = 'Toque aqui: conte quanto você tem';
 
-    var elFinal = document.getElementById('diarioSaldoFinal');
+    var elFinal = document.getElementById('cofrePrevisao');
     if(elFinal){
       elFinal.textContent = tracked ? fmtMoney(projetado) : '—';
       elFinal.classList.toggle('pos', tracked && projetado >= 0);
       elFinal.classList.toggle('neg', tracked && projetado < 0);
     }
-    var elFinalSub = document.getElementById('diarioSaldoFinalSub');
+    var elFinalSub = document.getElementById('cofrePrevisaoSub');
     if(elFinalSub) elFinalSub.textContent = tracked ? 'com todo o Mensal de ' + monthLabel(mk) : 'mês anterior ao saldo inicial';
 
     renderAvisoBackup();
     renderBoasVindas();
-    renderDiarioTable();
-  }
-
-  function renderDiarioTable(){
-    var mk = getSelectedDiarioMonth();
-    var container = document.getElementById('diarioBody');
-    if(!container) return;
-    container.innerHTML = "";
-
-    var day = diarioDay();
-    var list = state.daily.entries.filter(function(row){
-      return row.monthKey === mk && effectiveDay(row, mk) === day && dailyMatches(row, diarioTipo);
-    });
-
-    if(list.length === 0){
-      container.appendChild(el('div', 'empty-note', diarioTipo === 'income' ? 'Nenhum ganho neste dia.' : 'Nenhum gasto neste dia.'));
-      return;
-    }
-
-    list.forEach(function(row){
-      container.appendChild(buildEntryItem({
-        name: row.item,
-        namePlaceholder: diarioTipo === 'income' ? 'Nome do ganho' : 'Nome do gasto',
-        delTitle: 'Remover lançamento',
-        dayValue: row.day,
-        valueCents: row.amount,
-        onName: function(v){
-          row.item = v;
-          persist();
-        },
-        onDay: function(v){
-          row.day = v;
-          persist();
-          renderDiarioTable();
-        },
-        onDelete: function(){
-          var idx = state.daily.entries.indexOf(row);
-          if(idx > -1) state.daily.entries.splice(idx, 1);
-          persist();
-          renderDiario();
-        },
-        onValue: function(v){
-          row.amount = (v === null) ? undefined : v;
-          persist();
-          renderDiario();
-        }
-      }));
-    });
-  }
-
-  /* Abas Despesas | Receitas do Diário; ajusta também o bloco de lançamentos */
-  function renderDiarioTypeTabs(){
-    var row = document.getElementById('diarioTypeTabs');
-    if(row) buildTypeTabs(row, diarioTipo, function(k){ diarioTipo = k; renderDiario(); });
-    var book = document.getElementById('diarioBook');
-    if(book) book.className = 'book ' + (diarioTipo === 'income' ? 'income' : 'expenses');
-    var icon = document.getElementById('diarioBookIcon');
-    if(icon) icon.innerHTML = '<svg class="icon" viewBox="0 0 24 24"><path d="' +
-      (diarioTipo === 'income' ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6') + '"/></svg>';
-    var add = document.getElementById('addDiarioBtn');
-    if(add) add.innerHTML = '<span class="plus-sym">+</span> ' + (diarioTipo === 'income' ? 'adicionar ganho' : 'adicionar gasto');
-  }
-
-  function addDiarioRow(){
-    var mk = getSelectedDiarioMonth();
-    ensureMonth(mk);
-    var id = 'd' + (state.daily.nextId++);
-    var entry = { id: id, day: diarioDay(), item: '', amount: undefined, monthKey: mk };
-    if(diarioTipo === 'income') entry.type = 'income';
-    state.daily.entries.push(entry);
-    persist();
-    renderDiario();
-    focusLastName('diarioBody');
   }
 
   function focusLastName(bodyId){
@@ -1153,18 +1033,6 @@
       }
     }, 30);
   }
-
-  var diarioDataInput = document.getElementById('diarioDataInput');
-  if(diarioDataInput) diarioDataInput.addEventListener('change', function(e){ setDiarioData(e.target.value); });
-  var btnDiaHoje = document.getElementById('btnDiarioDiaHoje');
-  if(btnDiaHoje) btnDiaHoje.addEventListener('click', function(){ setDiarioData(todayISO()); });
-  var btnDiaAnt = document.getElementById('btnDiarioDiaAnterior');
-  if(btnDiaAnt) btnDiaAnt.addEventListener('click', function(){ setDiarioData(shiftDateISO(diarioData, -1)); });
-  var btnDiaProx = document.getElementById('btnDiarioDiaProximo');
-  if(btnDiaProx) btnDiaProx.addEventListener('click', function(){ setDiarioData(shiftDateISO(diarioData, 1)); });
-
-  var btnAddDiario = document.getElementById('addDiarioBtn');
-  if(btnAddDiario) btnAddDiario.addEventListener('click', addDiarioRow);
 
   /* ---------- Gasto rápido ---------- */
   var quickOverlay = document.getElementById('quickOverlay');
@@ -1203,34 +1071,32 @@
     if(e.target && e.target.value === 'installments' && qParcelas) setTimeout(function(){ qParcelas.focus(); }, 30);
   });
 
-  /* Botão +: no Diário lança despesa/receita do dia; no Mensal cria o item na aba aberta. */
-  var quickMode = 'diario';
+  /* Botão +: cria o item (gasto ou ganho) na aba aberta do Mensal. */
   var quickKind = 'expenses';
 
   function openQuick(){
     if(!quickOverlay || !state) return;
-    quickMode = document.body.getAttribute('data-view') === 'mensal' ? 'mensal' : 'diario';
-    quickKind = quickMode === 'mensal' ? mensalTipo : diarioTipo;
-    var mk = quickMode === 'mensal' ? state.selectedMonth : getSelectedDiarioMonth();
+    quickKind = mensalTipo;
+    var mk = state.selectedMonth;
     var isInc = quickKind === 'income';
     var title = document.getElementById('quickTitle');
     if(title) title.textContent = isInc ? 'Novo ganho' : 'Novo gasto';
     var lbl = document.getElementById('quickMonthLabel');
-    if(lbl) lbl.textContent = (quickMode === 'mensal' ? 'Entra no Mensal de ' : 'Entra em ') + monthLabel(mk) + '.';
+    if(lbl) lbl.textContent = 'Entra no Mensal de ' + monthLabel(mk) + '.';
     if(qValor) qValor.value = '';
     if(qItem) qItem.value = '';
-    if(qDia) qDia.value = quickMode === 'mensal' ? '' : diarioDay();
+    if(qDia) qDia.value = '';
     if(qParcelas) qParcelas.value = '';
-    // tipo (avulso / recorrente / parcelado) só existe no Mensal; despesa começa avulsa e receita recorrente
+    // tipo: despesa começa avulsa e receita recorrente
     var tipoBlock = document.getElementById('qTipoBlock');
-    if(tipoBlock) tipoBlock.style.display = quickMode === 'mensal' ? '' : 'none';
+    if(tipoBlock) tipoBlock.style.display = '';
     setQuickTipo(isInc ? 'recurring' : 'once');
-    // rótulo "assinatura": só para despesas do Mensal
+    // rótulo "assinatura": só para despesas
     var assBlock = document.getElementById('qAssinaturaBlock');
-    if(assBlock) assBlock.style.display = (quickMode === 'mensal' && !isInc) ? '' : 'none';
+    if(assBlock) assBlock.style.display = isInc ? 'none' : '';
     if(qAssinatura) qAssinatura.checked = false;
     var submitBtn = document.getElementById('quickSubmit');
-    if(submitBtn) submitBtn.textContent = quickMode === 'mensal' ? (isInc ? 'Adicionar ganho' : 'Adicionar gasto') : 'Lançar gasto';
+    if(submitBtn) submitBtn.textContent = isInc ? 'Adicionar ganho' : 'Adicionar gasto';
     quickOverlay.classList.add('open');
     setTimeout(function(){ if(qValor) qValor.focus(); }, 60);
   }
@@ -1255,76 +1121,60 @@
       var name = (qItem.value || '').trim();
       var day = parseInt(qDia.value, 10);
 
-      if(quickMode === 'mensal'){
-        var mkM = state.selectedMonth;
-        var nParc = 1;
-        if(quickTipo === 'installments'){
-          nParc = parseInt(qParcelas.value, 10);
-          if(isNaN(nParc) || nParc < 2 || nParc > 60){
-            showToast('Informe de 2 a 60 parcelas.', 'error');
-            qParcelas.focus();
-            return;
-          }
+      var mkM = state.selectedMonth;
+      var nParc = 1;
+      if(quickTipo === 'installments'){
+        nParc = parseInt(qParcelas.value, 10);
+        if(isNaN(nParc) || nParc < 2 || nParc > 60){
+          showToast('Informe de 2 a 60 parcelas.', 'error');
+          qParcelas.focus();
+          return;
         }
-        ensureMonth(mkM);
-        day = isNaN(day) ? null : Math.max(1, Math.min(31, day));
-        var idM = (isInc ? 'r' : 'e') + (state.nextId++);
-        var rowM = { id: idM, day: day, item: name, values: {}, instTotal: nParc, instStart: mkM };
-        if(!isInc && qAssinatura && qAssinatura.checked) rowM.subscription = true;
-        if(quickTipo === 'installments'){
-          for(var pi = 0; pi < nParc; pi++){
-            var mp = addMonthsToKey(mkM, pi);
-            ensureMonth(mp);
-            rowM.values[mp] = cents;
-          }
-        } else if(quickTipo === 'recurring'){
-          // recorrente: já entra neste mês e em todos os meses seguintes que existem
-          state.months.forEach(function(m){ if(m >= mkM) rowM.values[m] = cents; });
-        } else {
-          rowM.values[mkM] = cents;
-          rowM.once = true;
-          rowM.onceMonth = mkM;
-        }
-        (isInc ? state.income : state.expenses).push(rowM);
-        persist();
-        render();
-        closeQuick();
-        var what = isInc ? 'Ganho' : 'Gasto';
-        if(nParc > 1) showToast(what + ' parcelado: ' + nParc + ' × ' + fmtMoney(cents) + ' adicionado.', 'success', 3200);
-        else showToast(what + ' de ' + fmtMoney(cents) + ' adicionado.', 'success', 2600);
-        return;
       }
-
-      var mk = getSelectedDiarioMonth();
-      ensureMonth(mk);
-      if(isNaN(day)) day = diarioDay();
-      day = Math.max(1, Math.min(lastDayOfMonth(mk), day));
-      var id = 'd' + (state.daily.nextId++);
-      var entry = { id: id, day: day, item: name, amount: cents, monthKey: mk };
-      if(isInc) entry.type = 'income';
-      state.daily.entries.push(entry);
+      ensureMonth(mkM);
+      day = isNaN(day) ? null : Math.max(1, Math.min(31, day));
+      var idM = (isInc ? 'r' : 'e') + (state.nextId++);
+      var rowM = { id: idM, day: day, item: name, values: {}, instTotal: nParc, instStart: mkM, criado: todayISO() };
+      if(!isInc && qAssinatura && qAssinatura.checked) rowM.subscription = true;
+      if(quickTipo === 'installments'){
+        for(var pi = 0; pi < nParc; pi++){
+          var mp = addMonthsToKey(mkM, pi);
+          ensureMonth(mp);
+          rowM.values[mp] = cents;
+        }
+      } else if(quickTipo === 'recurring'){
+        // recorrente: já entra neste mês e em todos os meses seguintes que existem
+        state.months.forEach(function(m){ if(m >= mkM) rowM.values[m] = cents; });
+      } else {
+        rowM.values[mkM] = cents;
+        rowM.once = true;
+        rowM.onceMonth = mkM;
+      }
+      (isInc ? state.income : state.expenses).push(rowM);
       persist();
-      renderDiario();
+      render();
       closeQuick();
-      showToast((isInc ? 'Ganho' : 'Gasto') + ' de ' + fmtMoney(cents) + ' lançado.', 'success', 2600);
+      var what = isInc ? 'Ganho' : 'Gasto';
+      if(nParc > 1) showToast(what + ' parcelado: ' + nParc + ' × ' + fmtMoney(cents) + ' adicionado.', 'success', 3200);
+      else showToast(what + ' de ' + fmtMoney(cents) + ' adicionado.', 'success', 2600);
     });
   }
 
-  var diarioSaldoAtualInput = document.getElementById('diarioSaldoAtualInput');
-  if(diarioSaldoAtualInput){
-    var cardSaldoEl = diarioSaldoAtualInput.closest('.stat-card');
+  var cofreSaldoInput = document.getElementById('cofreSaldoInput');
+  if(cofreSaldoInput){
+    var cardSaldoEl = cofreSaldoInput.closest('.stat-card');
     if(cardSaldoEl) cardSaldoEl.addEventListener('click', function(e){
-      if(e.target !== diarioSaldoAtualInput) diarioSaldoAtualInput.focus();
+      if(e.target !== cofreSaldoInput) cofreSaldoInput.focus();
     });
-    diarioSaldoAtualInput.addEventListener('focus', function(){
+    cofreSaldoInput.addEventListener('focus', function(){
       // mês sem saldo: o campo abre vazio
-      diarioSaldoAtualInput.value = isMonthTracked(getSelectedDiarioMonth()) ? centsToEdit(saldoAtualCents) : '';
-      setTimeout(function(){ try{ diarioSaldoAtualInput.select(); }catch(e){} }, 0);
+      cofreSaldoInput.value = isMonthTracked(state.selectedMonth) ? centsToEdit(saldoAtualCents) : '';
+      setTimeout(function(){ try{ cofreSaldoInput.select(); }catch(e){} }, 0);
     });
     var btnConta = document.getElementById('btnSaldoConta');
     if(btnConta) btnConta.addEventListener('click', function(e){ e.stopPropagation(); mostrarConta(); });
     function mostrarConta(){
-      var mk = getSelectedDiarioMonth();
+      var mk = state.selectedMonth;
       if(!isMonthTracked(mk)){ showToast('Este mês é anterior ao saldo inicial.', 'info'); return; }
       recomputeDailyBalances();
       var b = state.daily.balances[mk], cut = mensalCutoffDay(mk);
@@ -1333,35 +1183,36 @@
       var ate = cut === 0 ? 'Mês futuro: nada contado ainda.' : cut >= 99 ? 'Mês encerrado: tudo contado.' : 'Contado até o dia ' + cut + '.';
       var primeiro = state.months.slice().sort()[0] === mk;
       var podeAuto = !!b.manual && !primeiro;
-      var msg = ['Saldo inicial: ' + fmtMoney(b.initial), '+ Ganhos do Mensal: ' + fmtMoney(inc), '− Gastos do Mensal: ' + fmtMoney(exp),
-        (dn >= 0 ? '+ ' : '− ') + 'Diário (líquido): ' + fmtMoney(Math.abs(dn)), '= Cofre agora: ' + fmtMoney(saldoAtualCents), '',
-        ate + ' O que ainda vai cair no mês entra só na Previsão (' + fmtMoney(proj) + ').'];
+      var msg = ['Saldo inicial: ' + fmtMoney(b.initial), '+ Ganhos do Mensal: ' + fmtMoney(inc), '− Gastos do Mensal: ' + fmtMoney(exp)];
+      if(dn !== 0) msg.push((dn >= 0 ? '+ ' : '− ') + 'Lançamentos antigos do Diário: ' + fmtMoney(Math.abs(dn)));
+      msg.push('= Cofre agora: ' + fmtMoney(saldoAtualCents), '',
+        ate + ' O que ainda vai cair no mês entra só na Previsão (' + fmtMoney(proj) + ').');
       if(podeAuto) msg.push('', 'Você ajustou este saldo manualmente.');
       showConfirm(msg.join('\n'), { title: 'Como é calculado', pre: true, single: !podeAuto, cancelLabel: 'Fechar', confirmLabel: podeAuto ? 'Voltar ao automático' : 'Ok' }).then(function(ok){
         if(ok && podeAuto){
           state.daily.balances[mk].manual = false;
-          recomputeDailyBalances(); persist(); renderDiario();
+          recomputeDailyBalances(); persist(); renderPanel();
           showToast('Cofre voltou ao cálculo automático.', 'success');
         }
       });
     }
-    diarioSaldoAtualInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){ e.preventDefault(); diarioSaldoAtualInput.blur(); }
+    cofreSaldoInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); cofreSaldoInput.blur(); }
     });
-    diarioSaldoAtualInput.addEventListener('blur', function(){
-      var txt = diarioSaldoAtualInput.value.trim();
-      var mk = getSelectedDiarioMonth();
+    cofreSaldoInput.addEventListener('blur', function(){
+      var txt = cofreSaldoInput.value.trim();
+      var mk = state.selectedMonth;
       var tracked = isMonthTracked(mk);
       function shown(){ return isMonthTracked(mk) ? fmtMoney(saldoAtualCents) : '—'; }
       // vazio ou igual ao atual: não altera nada
       if(txt === '' || (tracked && txt === centsToEdit(saldoAtualCents))){
-        diarioSaldoAtualInput.value = shown();
+        cofreSaldoInput.value = shown();
         return;
       }
       var v = parseCentsText(txt);
       if(v === null){
         showToast('Valor inválido. Use o formato 1234,56.', 'error');
-        diarioSaldoAtualInput.value = shown();
+        cofreSaldoInput.value = shown();
         return;
       }
       ensureMonth(mk);
@@ -1369,8 +1220,8 @@
       state.daily.balances[mk] = { initial: v - saldoCaido(mk), manual: true };
       marcarBoasVindas();
       persist();
-      renderDiario();
-      diarioSaldoAtualInput.value = shown();
+      renderPanel();
+      cofreSaldoInput.value = shown();
     });
   }
 
@@ -1386,10 +1237,8 @@
     state = seedData();
     ensureCurrentMonthSelected();
     marcarBoasVindas();
-    diarioData = todayISO();
     persist();
     render();
-    renderDiario();
   }
 
   var btnReset = document.getElementById('resetBtn');
@@ -1411,7 +1260,6 @@
         marcarBoasVindas();
         persist();
         render();
-        renderDiario();
       });
     });
   }
@@ -1419,7 +1267,6 @@
   /* ---------- Navegação e Ajustes ---------- */
   var viewTriggers = document.querySelectorAll('.view-trigger');
   var viewMensal = document.getElementById('viewMensal');
-  var viewDiario = document.getElementById('viewDiario');
   var viewAnual = document.getElementById('viewAnual');
 
   var configOverlay = document.getElementById('configOverlay');
@@ -1469,18 +1316,16 @@
     if(e.key === 'Escape') closeTopLayer();
   });
 
-  /* Botão voltar do Android (@capacitor/app): fecha a camada de cima; depois vai ao Diário;
-     já no Diário, sai do app. */
+  /* Botão voltar do Android (@capacitor/app): fecha a camada de cima; depois vai ao Mensal;
+     já no Mensal, volta ao hub. */
   var backButtonBound = false;
 
-  /* Abre sempre no mês atual e no dia de hoje */
+  /* Abre sempre no mês atual */
   function goToCurrentMonth(){
     if(!state) return;
     var tk = getTodayMonthKey();
     ensureCurrentMonthSelected();
     state.selectedMonth = tk;
-    state.selectedDiarioMonth = tk;
-    diarioData = todayISO();
     anualSelected = null;
   }
 
@@ -1493,7 +1338,7 @@
         // voltou de segundo plano depois de mais de 1 minuto: volta ao mês atual
         if(pausedAt && Date.now() - pausedAt > 60000){
           goToCurrentMonth();
-          showView(document.body.getAttribute('data-view') || 'diario');
+          showView(document.body.getAttribute('data-view') || 'mensal');
         }
         pausedAt = 0;
       });
@@ -1510,7 +1355,7 @@
     try{
       var r = AppP.addListener('backButton', function(){
         if(closeTopLayer()) return;
-        if(document.body.getAttribute('data-view') !== 'diario'){ showView('diario'); return; }
+        if(document.body.getAttribute('data-view') !== 'mensal'){ showView('mensal'); return; }
         window.location.href = '../../index.html';
       });
       if(r && typeof r.catch === 'function') r.catch(function(){});
@@ -1521,7 +1366,6 @@
 
   function showView(view){
     if(viewMensal) viewMensal.style.display = 'none';
-    if(viewDiario) viewDiario.style.display = 'none';
     if(viewAnual) viewAnual.style.display = 'none';
 
     var topBar = document.querySelector('.top-bar');
@@ -1541,11 +1385,6 @@
       activateTriggers('anual');
       if(pageTitle) pageTitle.textContent = '';
       renderAnual();
-    } else if(view === 'diario'){
-      if(viewDiario) viewDiario.style.display = 'block';
-      activateTriggers('diario');
-      if(pageTitle) pageTitle.textContent = '';
-      renderDiario();
     } else {
       if(viewMensal) viewMensal.style.display = 'block';
       activateTriggers('mensal');
@@ -1659,7 +1498,6 @@
             marcarBoasVindas();
             persist();
             render();
-            renderDiario();
             closeConfig();
           });
         }catch(err){
@@ -1670,7 +1508,7 @@
     });
   }
 
-  /* ---------- Lembrete de backup (topo do Diário) ---------- */
+  /* ---------- Lembrete de backup (topo do Mensal) ---------- */
   function appIsEmpty(){
     return !state || (state.expenses.length === 0 && state.income.length === 0 && state.daily.entries.length === 0);
   }
@@ -1765,15 +1603,15 @@
         wSaldo.focus();
         return;
       }
-      var mk = getSelectedDiarioMonth();
+      var mk = state.selectedMonth;
       ensureMonth(mk);
       recomputeDailyBalances();
       var primeiro = state.months.slice().sort()[0] === mk;
       state.daily.balances[mk] = { initial: cents - saldoCaido(mk), manual: !primeiro };
       marcarBoasVindas();
       persist();
-      renderDiario();
-      showToast('Cofre registrado: ' + fmtMoney(cents) + '. Agora lance seus gastos no + ou cadastre as contas no Mensal.', 'success', 6000);
+      renderPanel();
+      showToast('Cofre registrado: ' + fmtMoney(cents) + '. Agora cadastre seus gastos e ganhos no +.', 'success', 6000);
     });
   }
 
@@ -2154,13 +1992,13 @@
       ensureCurrentMonthSelected();
       goToCurrentMonth();
       persist();
-      showView('diario');
+      showView('mensal');
       startNotifications();
       if(invalidSaved) showToast('Não foi possível ler os dados salvos. Uma cópia foi guardada e o app abriu vazio.', 'error', 7000);
     }).catch(function(){
       state = emptyData();
       ensureCurrentMonthSelected();
-      showView('diario');
+      showView('mensal');
       startNotifications();
     });
   }

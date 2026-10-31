@@ -29,13 +29,9 @@
         </div>
       </div>
       <div class="sidebar-nav bottom-nav">
-        <button aria-label="Mensal" title="Mensal" class="nav-btn nav-item view-trigger" data-view="mensal">
+        <button aria-label="Mensal" title="Mensal" class="nav-btn nav-item view-trigger active" data-view="mensal">
           <svg class="icon" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg>
           <span class="nav-label">Mensal</span>
-        </button>
-        <button aria-label="Diário" title="Diário" class="nav-btn nav-item view-trigger nav-home-center active" data-view="diario">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          <span class="nav-label">Diário</span>
         </button>
         <button aria-label="Anual" title="Anual" class="nav-btn nav-item view-trigger" data-view="anual">
           <svg class="icon" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V6M19 20v-5M3 20.5h18"/></svg>
@@ -54,13 +50,38 @@
       <div class="wrap" id="app">
         <header class="top-bar">
           <div class="top-bar-title">
-            <h1 id="pageTitle">Gastos do dia</h1>
+            <h1 id="pageTitle"></h1>
           </div>
         </header>
 
         <!-- VIEW MENSAL -->
         <div id="viewMensal" style="display:none;">
+          <div class="aviso aviso-backup" id="avisoBackup" role="status" hidden>
+            <p class="aviso-text" id="avisoBackupText"></p>
+            <div class="aviso-actions">
+              <button class="btn btn-accent btn-small" id="avisoBackupFazer" type="button">Fazer backup</button>
+              <button class="btn btn-ghost btn-small" id="avisoBackupDepois" type="button">Depois</button>
+            </div>
+          </div>
+
           <div class="month-nav-row" id="tabsRow"></div>
+
+          <div class="stat-strip duo">
+            <div class="stat-card saldo">
+              <span class="stat-label">Cofre agora</span>
+              <label class="stat-value stat-edit" for="cofreSaldoInput" title="Toque para editar o cofre">
+                <input type="text" inputmode="decimal" autocomplete="off" class="stat-value-input" id="cofreSaldoInput" aria-label="Cofre agora (editável)">
+                <svg class="icon icon-edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </label>
+              <span class="stat-sub" id="cofreSaldoSub">&nbsp;</span>
+              <button type="button" class="stat-info" id="btnSaldoConta" aria-label="Ver como o cofre é calculado">i</button>
+            </div>
+            <div class="stat-card saldo">
+              <span class="stat-label">Previsão</span>
+              <span class="stat-value" id="cofrePrevisao">R$ 0,00</span>
+              <span class="stat-sub" id="cofrePrevisaoSub">&nbsp;</span>
+            </div>
+          </div>
 
           <div class="stat-strip">
             <div class="stat-card despesas">
@@ -96,60 +117,6 @@
             </div>
             <div class="entry-list" id="incomeBody"></div>
             <button class="add-row-btn" id="addIncomeBtn" type="button"><span class="plus-sym">+</span>Adicionar ganho</button>
-          </section>
-        </div>
-
-        <!-- VIEW DIÁRIO -->
-        <div id="viewDiario">
-          <div class="aviso aviso-backup" id="avisoBackup" role="status" hidden>
-            <p class="aviso-text" id="avisoBackupText"></p>
-            <div class="aviso-actions">
-              <button class="btn btn-accent btn-small" id="avisoBackupFazer" type="button">Fazer backup</button>
-              <button class="btn btn-ghost btn-small" id="avisoBackupDepois" type="button">Depois</button>
-            </div>
-          </div>
-
-          <div class="month-nav-row" id="diarioTabsRow">
-          <div class="date-nav">
-            <div class="date-picker-pill">
-              <button id="btnDiarioDiaAnterior" class="btn-icon" type="button" title="Dia anterior" aria-label="Dia anterior">‹</button>
-              <input type="date" id="diarioDataInput" aria-label="Data dos lançamentos">
-              <button id="btnDiarioDiaProximo" class="btn-icon" type="button" title="Próximo dia" aria-label="Próximo dia">›</button>
-            </div>
-            <button id="btnDiarioDiaHoje" class="btn-hoje" type="button">Hoje</button>
-          </div>
-          </div>
-
-          <div class="stat-strip">
-            <div class="stat-card despesas">
-              <span class="stat-label">Gastos</span>
-              <span class="stat-value" id="diarioDespesas">R$ 0,00</span>
-              <span class="stat-sub" id="diarioDespesasCount">0 itens</span>
-            </div>
-            <div class="stat-card saldo">
-              <span class="stat-label">Cofre agora</span>
-              <label class="stat-value stat-edit" for="diarioSaldoAtualInput" title="Toque para editar o cofre">
-                <input type="text" inputmode="decimal" autocomplete="off" class="stat-value-input" id="diarioSaldoAtualInput" aria-label="Cofre agora (editável)">
-                <svg class="icon icon-edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              </label>
-              <span class="stat-sub" id="diarioSaldoAtualSub">&nbsp;</span>
-              <button type="button" class="stat-info" id="btnSaldoConta" aria-label="Ver como o cofre é calculado">i</button>
-            </div>
-            <div class="stat-card saldo">
-              <span class="stat-label">Previsão</span>
-              <span class="stat-value" id="diarioSaldoFinal">R$ 0,00</span>
-              <span class="stat-sub" id="diarioSaldoFinalSub">&nbsp;</span>
-            </div>
-          </div>
-
-          <div class="tabs-row type-tabs" id="diarioTypeTabs"></div>
-
-          <section class="book expenses" id="diarioBook">
-            <div class="book-head">
-              <h2 class="book-title"><span class="book-icon" id="diarioBookIcon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span>Lançamentos</h2>
-            </div>
-            <div class="entry-list" id="diarioBody"></div>
-            <button class="add-row-btn" id="addDiarioBtn" type="button"><span class="plus-sym">+</span>Adicionar gasto</button>
           </section>
         </div>
 
